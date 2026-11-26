@@ -12,7 +12,8 @@ const site = process.env.SITE_URL || 'http://localhost:4321';
 // https://astro.build/config
 export default defineConfig({
   site,
-  integrations: [sitemap()],
+  // as páginas /estilo/* repetem o conteúdo da landing (canonical aponta para /)
+  integrations: [sitemap({ filter: (page) => !page.includes('/estilo/') })],
   build: {
     // CSS pequeno vai inline no HTML: uma requisição a menos no caminho crítico
     inlineStylesheets: 'auto',

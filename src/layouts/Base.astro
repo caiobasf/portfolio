@@ -1,6 +1,9 @@
 ---
 import '../styles/global.css';
 import Fonts from '../components/Fonts.astro';
+import StyleSwitcher from '../components/StyleSwitcher.astro';
+import EstiloTransicao from '../components/EstiloTransicao.astro';
+import { ESTILOS, ESTILO_STORAGE_KEY, ESTILO_ORIGINAL } from '../estilos/registro';
 import { seo, pessoa, pessoaJsonLd } from '../content/perfil';
 import {
   PALETTE_IDS,
@@ -20,9 +23,25 @@ interface Props {
   boot?: boolean;
   /** Inclui os dados estruturados Person (só a landing) */
   person?: boolean;
+  /**
+   * Só a landing: se o visitante escolheu outro estilo no seletor, vai direto
+   * para ele (antes da primeira pintura).
+   */
+  redirecionaEstilo?: boolean;
 }
 
-const { title = seo.titulo, description = seo.descricao, noindex = false, boot = false, person = false } = Astro.props;
+const {
+  title = seo.titulo,
+  description = seo.descricao,
+  noindex = false,
+  boot = false,
+  person = false,
+  redirecionaEstilo = false,
+} = Astro.props;
+
+const rotasEstilo = Object.fromEntries(ESTILOS.filter((e) => e.id !== ESTILO_ORIGINAL).map((e) => [e.id, e.href]));
+const estiloRedirect = `(function(){try{var id=localStorage.getItem(${JSON.stringify(ESTILO_STORAGE_KEY)}),r=${JSON.stringify(rotasEstilo)};
+if(id&&Object.prototype.hasOwnProperty.call(r,id)){document.documentElement.style.visibility='hidden';location.replace(r[id]+location.hash);}}catch(e){}})();`;
 
 const site = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(Astro.url.pathname, site).href;
@@ -47,6 +66,8 @@ var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('co
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content={temas[DEFAULT_PALETTE]} />
     <meta name="color-scheme" content="light dark" />
+    {redirecionaEstilo && <script is:inline set:html={estiloRedirect} />}
+    <EstiloTransicao />
     <script is:inline set:html={paletteBoot} />
     <style is:inline set:html={paletteCss()} />
     {
@@ -102,5 +123,6 @@ var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('co
   </head>
   <body>
     <slot />
+    <StyleSwitcher atual={ESTILO_ORIGINAL} />
   </body>
 </html>

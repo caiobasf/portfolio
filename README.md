@@ -2,6 +2,8 @@
 
 Site pessoal estático em Astro + TypeScript: landing (`/`) com boot, chat de respostas prontas (`/conversa`) e `404`.
 
+Um botão flutuante (canto inferior direito) troca o site inteiro entre **11 estilos**: o original (Scanner) e 10 linguagens visuais completas em `/estilo/<id>/` (Cyberpunk, Executivo, Pixel RPG, Terminal, Neo-brutalista, Suíço, Bento, Desktop 98, Jornal e Caderno). Detalhes, regras e pesquisa em [`docs/estilos.md`](docs/estilos.md).
+
 ## Comandos
 
 Requer Node ≥ 22.23.4.
@@ -16,6 +18,8 @@ Requer Node ≥ 22.23.4.
 | `npm run test:unit` | Teste de contraste das paletas (falha se alguma cor cair do mínimo WCAG) |
 | `npm run test:e2e` | Testes de navegador (Playwright + axe, Chrome do sistema): título do hero, paletas, efeitos, sem JS, capturas em `test-results/telas/` |
 | `npm test`        | Os dois acima                                                    |
+| `npm run miniaturas` | Regera as miniaturas do seletor de estilo em `public/estilos/` (com o site rodando) |
+| `npm run captura -- estilo/pixel/ saida.png --full --axe` | Captura e diagnóstico de uma página (erros, estouro, axe) |
 | `npm run images`  | Regera `public/og-image.png` e `public/apple-touch-icon.png` (precisa de Chrome ou Edge) |
 
 Para rever o boot de novo na mesma aba: `sessionStorage.removeItem('cf-boot')` no console e recarregar.
@@ -26,6 +30,7 @@ Para rever o boot de novo na mesma aba: `sessionStorage.removeItem('cf-boot')` n
 - **Cores:** `src/styles/palettes.ts`, as quatro paletas (scanner, escuro, vermelho, mono). Depois de mexer, rode `npm run test:unit`. Nenhum componente escreve cor direto.
 - **Fontes, medidas e efeitos derivados da paleta:** `src/styles/tokens.css`.
 - **Troca de paleta no navegador:** `src/scripts/palette.ts` (`getPalette()` para canvases, evento `palette-change`) e o seletor `src/components/PaletteSwitcher.astro`. Para testar à mão: `document.documentElement.dataset.palette = 'mono'` no console; para limpar a escolha: `localStorage.removeItem('cf-palette')`.
+- **Estilos:** cada um em `src/estilos/<id>/` + `src/pages/estilo/<id>.astro`; a lista do seletor em `src/estilos/registro.ts`. Para limpar a escolha: `localStorage.removeItem('cf-estilo')`.
 - **Respostas e palavras-chave do chat:** `src/scripts/chat-data.ts`.
 - **Animações de pixel:** `src/scripts/pixel-text.ts` (subtítulo e apelido).
 - **Boot:** `src/components/Boot.astro` + `src/scripts/boot.ts`. O script inline em `src/layouts/Base.astro` decide se ele aparece.

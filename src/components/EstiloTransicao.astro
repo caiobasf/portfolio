@@ -1,0 +1,58 @@
+---
+/**
+ * Transição entre páginas (View Transitions entre documentos, sem JS de
+ * roteamento). Toda navegação interna ganha um esmaecimento; a troca de estilo
+ * pelo seletor ganha uma revelação circular a partir do botão.
+ *
+ * Precisa estar no <head> de TODAS as páginas (layouts Base e Estilo): a
+ * transição só acontece quando as duas pontas declaram @view-transition.
+ */
+import { ESTILO_STORAGE_KEY } from '../estilos/registro';
+
+interface Props {
+  /** id do estilo desta página: fica salvo como a escolha atual */
+  id?: string;
+}
+const { id } = Astro.props;
+
+const script = `(function(){
+${id ? `try{localStorage.setItem(${JSON.stringify(ESTILO_STORAGE_KEY)},${JSON.stringify(id)})}catch(e){}` : ''}
+addEventListener('pagereveal',function(e){
+  var vt=e.viewTransition;if(!vt)return;
+  try{if(sessionStorage.getItem('cf-estilo-vt')){sessionStorage.removeItem('cf-estilo-vt');vt.types&&vt.types.add('estilo');}}catch(err){}
+});
+})();`;
+---
+
+<script is:inline set:html={script} />
+<style is:inline>
+  @view-transition {
+    navigation: auto;
+  }
+  ::view-transition-group(root) {
+    animation-duration: 0.35s;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html:active-view-transition-type(estilo)::view-transition-old(root) {
+      animation: none;
+    }
+    html:active-view-transition-type(estilo)::view-transition-new(root) {
+      animation: cf-estilo-revela 0.75s cubic-bezier(0.76, 0, 0.24, 1) both;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+  @keyframes cf-estilo-revela {
+    from {
+      clip-path: circle(0 at calc(100% - 90px) calc(100% - 44px));
+    }
+    to {
+      clip-path: circle(160vmax at calc(100% - 90px) calc(100% - 44px));
+    }
+  }
+</style>

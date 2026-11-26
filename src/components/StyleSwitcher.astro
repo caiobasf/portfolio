@@ -1,0 +1,533 @@
+---
+/**
+ * Botão flutuante de troca de estilo, presente em todas as páginas.
+ *
+ * Usa Shadow DOM declarativo (<template shadowrootmode>) para que o CSS de
+ * cada estilo não vaze para o botão nem o contrário. Funciona sem JavaScript:
+ * o painel é um [popover] nativo e cada estilo é um link comum. O script só
+ * acrescenta a revelação circular na troca e o botão "Surpresa".
+ *
+ * Um estilo pode mover o botão (por exemplo, para não cobrir uma barra de
+ * tarefas) definindo no :root:
+ *   --estilo-switcher-bottom: 56px;
+ *   --estilo-switcher-right: 16px;
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { ESTILOS, ESTILO_STORAGE_KEY } from '../estilos/registro';
+
+interface Props {
+  atual: string;
+}
+const { atual } = Astro.props;
+
+const i = Math.max(
+  0,
+  ESTILOS.findIndex((e) => e.id === atual),
+);
+const estilo = ESTILOS[i];
+const anterior = ESTILOS[(i - 1 + ESTILOS.length) % ESTILOS.length];
+const proximo = ESTILOS[(i + 1) % ESTILOS.length];
+
+const temMiniatura = (id: string) => fs.existsSync(path.join(process.cwd(), 'public', 'estilos', `${id}.jpg`));
+const cards = ESTILOS.map((e) => ({ ...e, miniatura: temMiniatura(e.id) ? `/estilos/${e.id}.jpg` : null }));
+const amostra = (a: readonly [string, string, string]) => `--a0:${a[0]};--a1:${a[1]};--a2:${a[2]}`;
+const total = String(ESTILOS.length - 1).padStart(2, '0');
+---
+
+<estilo-switcher data-storage-key={ESTILO_STORAGE_KEY} data-atual={atual}>
+  <template shadowrootmode="open">
+    <style is:inline>
+      :host {
+        all: initial;
+        position: fixed;
+        right: calc(var(--estilo-switcher-right, 16px) + env(safe-area-inset-right, 0px));
+        bottom: calc(var(--estilo-switcher-bottom, 16px) + env(safe-area-inset-bottom, 0px));
+        z-index: 2147483000;
+        font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      .bar {
+        display: flex;
+        align-items: stretch;
+        height: 48px;
+        padding: 4px;
+        gap: 2px;
+        border-radius: 999px;
+        background: rgba(16, 16, 20, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow:
+          0 10px 30px -8px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(0, 0, 0, 0.4);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+      }
+      .nav,
+      .open {
+        all: unset;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        border-radius: 999px;
+        color: #f4f4f6;
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.15s;
+      }
+      .open {
+        gap: 10px;
+        padding: 0 14px 0 8px;
+      }
+      .nav:hover,
+      .open:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .nav:active,
+      .open:active {
+        transform: scale(0.96);
+      }
+      .nav:focus-visible,
+      .open:focus-visible,
+      .card:focus-visible,
+      .acao:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 5px #3a6df0;
+      }
+      .nav svg {
+        width: 16px;
+        height: 16px;
+      }
+      .dots {
+        display: inline-flex;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        background: conic-gradient(var(--a0) 0 50%, var(--a1) 50% 75%, var(--a2) 75% 100%);
+        flex: none;
+      }
+      .txt {
+        display: grid;
+        gap: 3px;
+        text-align: left;
+      }
+      .kicker {
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #a9a9b3;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .nome {
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        white-space: nowrap;
+      }
+      @media (max-width: 420px) {
+        .kicker {
+          display: none;
+        }
+      }
+
+      /* ---------- painel ---------- */
+      .painel {
+        all: unset;
+        position: fixed;
+        inset: auto 0 0 0;
+        margin: 0 auto;
+        width: min(1260px, 100vw);
+        max-height: min(86dvh, 860px);
+        overflow: auto;
+        overscroll-behavior: contain;
+        padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+        background: #101014;
+        color: #f4f4f6;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-bottom: 0;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.5);
+        font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .painel:not(:popover-open) {
+        display: none;
+      }
+      .painel::backdrop {
+        background: rgba(5, 5, 8, 0.6);
+        -webkit-backdrop-filter: blur(3px);
+        backdrop-filter: blur(3px);
+      }
+      @media (min-width: 720px) {
+        .painel {
+          inset: 0;
+          margin: auto;
+          height: fit-content;
+          padding: 28px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 20px;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .painel:popover-open {
+          animation: sobe 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .painel:popover-open .card {
+          animation: entra 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+          animation-delay: calc(var(--n) * 25ms);
+        }
+      }
+      @keyframes sobe {
+        from {
+          opacity: 0;
+          transform: translateY(24px) scale(0.98);
+        }
+      }
+      @keyframes entra {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+      }
+      .topo {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      h2 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .sub {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.45;
+        color: #b4b4bd;
+        max-width: 54ch;
+      }
+      .acoes {
+        display: flex;
+        gap: 8px;
+        flex: none;
+      }
+      .acao {
+        all: unset;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        color: #f4f4f6;
+      }
+      .acao:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .acao[hidden] {
+        display: none;
+      }
+      @media (max-width: 480px) {
+        .acao .rot {
+          display: none;
+        }
+      }
+      .grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 196px), 1fr));
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      @media (min-width: 1100px) {
+        .grade {
+          grid-template-columns: repeat(6, 1fr);
+        }
+      }
+      @media (max-width: 480px) {
+        .grade {
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+        .cd {
+          display: none;
+        }
+      }
+      .card {
+        display: grid;
+        align-content: start;
+        gap: 10px;
+        height: 100%;
+        padding: 8px 8px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        color: inherit;
+        text-decoration: none;
+        transition:
+          border-color 0.15s,
+          background 0.15s,
+          transform 0.2s;
+      }
+      .card:hover {
+        border-color: rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.07);
+        transform: translateY(-2px);
+      }
+      .card[aria-current='page'] {
+        border-color: #fff;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .thumb {
+        position: relative;
+        display: block;
+        aspect-ratio: 16 / 9;
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--a0);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .thumb img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top center;
+      }
+      .thumb .fake {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        align-content: center;
+        gap: 6px;
+        padding: 0 14px;
+        color: var(--a1);
+        font: 800 26px/1 ui-sans-serif, system-ui, sans-serif;
+      }
+      .thumb .fake i {
+        display: block;
+        width: 46%;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--a2);
+      }
+      .badge {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        padding: 3px 7px;
+        border-radius: 999px;
+        background: #fff;
+        color: #101014;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .info {
+        display: grid;
+        gap: 4px;
+        padding: 0 4px;
+      }
+      .linha {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .num {
+        font: 600 11px/1 ui-monospace, 'Cascadia Code', Consolas, monospace;
+        color: #9a9aa5;
+      }
+      .cn {
+        font-size: 15px;
+        font-weight: 650;
+      }
+      .cd {
+        font-size: 13px;
+        line-height: 1.4;
+        color: #b4b4bd;
+      }
+    </style>
+
+    <nav class="bar" aria-label="Estilo do site">
+      <a class="nav" href={anterior.href} data-estilo-link={anterior.id} aria-label={`Estilo anterior: ${anterior.nome}`}>
+        <svg viewBox="0 0 16 16" aria-hidden="true"
+          ><path
+            d="M10 3 5 8l5 5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path></svg
+        >
+      </a>
+      <button
+        class="open"
+        type="button"
+        popovertarget="painel"
+        aria-haspopup="dialog"
+      >
+        <span class="dots" style={amostra(estilo.amostra)} aria-hidden="true"></span>
+        <span class="sr">Trocar estilo do site. Atual:</span>
+        <span class="txt">
+          <span class="kicker">Estilo {estilo.numero}/{total}</span>
+          <span class="nome">{estilo.nome}</span>
+        </span>
+      </button>
+      <a class="nav" href={proximo.href} data-estilo-link={proximo.id} aria-label={`Próximo estilo: ${proximo.nome}`}>
+        <svg viewBox="0 0 16 16" aria-hidden="true"
+          ><path
+            d="m6 3 5 5-5 5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path></svg
+        >
+      </a>
+    </nav>
+
+    <div class="painel" id="painel" popover role="dialog" aria-labelledby="painel-titulo">
+      <div class="topo">
+        <div>
+          <h2 id="painel-titulo">Escolha um estilo</h2>
+          <p class="sub">
+            O mesmo currículo em {ESTILOS.length} linguagens visuais diferentes. A escolha fica salva neste navegador.
+          </p>
+        </div>
+        <div class="acoes">
+          <button class="acao" type="button" data-surpresa hidden aria-label="Estilo surpresa">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"
+              ><path
+                d="M1 4h3l7 8h4M1 12h3l2-2.3M11 4h4M13 2l2 2-2 2M13 10l2 2-2 2M8.6 6.5 11 4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path></svg
+            >
+            <span class="rot" aria-hidden="true">Surpresa</span>
+          </button>
+          <button class="acao" type="button" popovertarget="painel" popovertargetaction="hide" aria-label="Fechar">
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"
+              ><path d="m2 2 10 10M12 2 2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg
+            >
+          </button>
+        </div>
+      </div>
+      <ul class="grade">
+        {
+          cards.map((c, n) => (
+            <li>
+              <a
+                class="card"
+                href={c.href}
+                data-estilo-link={c.id}
+                aria-current={c.id === atual ? 'page' : undefined}
+                style={`${amostra(c.amostra)};--n:${n}`}
+              >
+                <span class="thumb" aria-hidden="true">
+                  {c.miniatura ? (
+                    <img src={c.miniatura} alt="" width="480" height="300" loading="lazy" decoding="async" />
+                  ) : (
+                    <span class="fake">
+                      Aa
+                      <i />
+                    </span>
+                  )}
+                  {c.id === atual && <span class="badge">Atual</span>}
+                </span>
+                <span class="info">
+                  <span class="linha">
+                    <span class="num">{c.numero}</span>
+                    <span class="cn">{c.nome}</span>
+                  </span>
+                  <span class="cd">{c.descricao}</span>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </template>
+</estilo-switcher>
+
+<script>
+  /*
+   * Melhorias com JS: salvar a escolha, pedir a revelação circular na próxima
+   * página e sortear um estilo. Sem JS tudo continua funcionando como links.
+   */
+  const host = document.querySelector<HTMLElement>('estilo-switcher');
+  const root = host?.shadowRoot;
+  if (host && root) {
+    const key = host.dataset.storageKey ?? 'cf-estilo';
+    const atual = host.dataset.atual ?? '';
+    const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('a[data-estilo-link]'));
+
+    const marcar = (id: string) => {
+      try {
+        localStorage.setItem(key, id);
+        sessionStorage.setItem('cf-estilo-vt', '1');
+      } catch {
+        /* sem armazenamento: a troca funciona, só não fica salva */
+      }
+    };
+
+    links.forEach((a) =>
+      a.addEventListener('click', (ev) => {
+        if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0) return;
+        marcar(a.dataset.estiloLink!);
+      }),
+    );
+
+    const cards = links.filter((a) => a.classList.contains('card'));
+    const surpresa = root.querySelector<HTMLButtonElement>('[data-surpresa]');
+    if (surpresa) {
+      surpresa.hidden = false;
+      surpresa.addEventListener('click', () => {
+        const outros = cards.filter((a) => a.dataset.estiloLink !== atual);
+        const alvo = outros[Math.floor(Math.random() * outros.length)];
+        marcar(alvo.dataset.estiloLink!);
+        location.href = alvo.href;
+      });
+    }
+
+    // ao abrir, o foco vai para o estilo atual
+    const painel = root.querySelector<HTMLElement>('#painel');
+    painel?.addEventListener('toggle', (ev) => {
+      if ((ev as ToggleEvent).newState === 'open') {
+        painel.scrollTop = 0;
+        const alvo = cards.find((a) => a.getAttribute('aria-current') === 'page') ?? cards[0];
+        alvo?.focus({ preventScroll: true });
+        const r = alvo?.getBoundingClientRect();
+        if (alvo && r && r.bottom > innerHeight) alvo.scrollIntoView({ block: 'nearest' });
+      }
+    });
+  }
+</script>
