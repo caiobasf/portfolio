@@ -14,6 +14,8 @@ Requer Node ≥ 22.23.4.
 | `npm run preview` | Serve o `dist/` localmente                                       |
 | `npm run check`   | Verificação de tipos (`astro check`)                             |
 | `npm run test:unit` | Teste de contraste das paletas (falha se alguma cor cair do mínimo WCAG) |
+| `npm run test:e2e` | Testes de navegador (Playwright + axe, Chrome do sistema): título do hero, paletas, efeitos, sem JS, capturas em `test-results/telas/` |
+| `npm test`        | Os dois acima                                                    |
 | `npm run images`  | Regera `public/og-image.png` e `public/apple-touch-icon.png` (precisa de Chrome ou Edge) |
 
 Para rever o boot de novo na mesma aba: `sessionStorage.removeItem('cf-boot')` no console e recarregar.
