@@ -1,5 +1,6 @@
 ---
 import { pessoa, construo } from '../content/perfil';
+import RegMarks from './RegMarks.astro';
 
 const [primeiroA, primeiroB] = construo[0];
 const apelido = pessoa.apelido.toUpperCase();
@@ -11,6 +12,7 @@ const fraseCompleta = `Eu construo ${partes.slice(0, -1).join(', ')} e ${partes.
 
 <section id="topo" class="hero" aria-labelledby="hero-titulo">
   <div class="scanlines" aria-hidden="true"></div>
+  <RegMarks class="hero__marks" linhas={['ESCANEANDO: PERFIL_01', 'FREQ: 7.3 MHz', 'KEY-1']} />
   <div class="container hero__inner">
     <p class="hero__status">
       <span class="hero__dot" aria-hidden="true"></span>
@@ -95,6 +97,18 @@ const fraseCompleta = `Eu construo ${partes.slice(0, -1).join(', ')} e ${partes.
       auto,
       var(--grid-size) var(--grid-size),
       var(--grid-size) var(--grid-size);
+  }
+
+  .hero :global(.hero__marks) {
+    position: absolute;
+    top: 56px;
+    right: max(var(--gutter), calc((100% - var(--container)) / 2 + var(--gutter)));
+    transition: opacity 0.25s;
+  }
+
+  /* o nome completo ocupa a largura toda: as marcas saem do caminho */
+  .hero:has([data-hero-title][data-target='nome']) :global(.hero__marks) {
+    opacity: 0;
   }
 
   .hero__inner {

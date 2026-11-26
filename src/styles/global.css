@@ -110,11 +110,15 @@ textarea {
 }
 
 .section {
+  /* fundo da seção, para rótulos que precisam "cortar" uma linha */
+  --section-bg: var(--bg);
+  position: relative;
   padding-block: var(--section-pad);
   border-bottom: 1px solid var(--line);
 }
 
 .section--alt {
+  --section-bg: var(--bg-alt);
   background: var(--bg-alt);
 }
 
@@ -321,9 +325,183 @@ textarea {
   );
 }
 
+/* ---------- Linguagem de scanner (spec 2, §6) — tudo decorativo ---------- */
+
+/* Rótulos técnicos e marcas: só em telas largas */
+@media (max-width: 899px) {
+  .hide-sm {
+    display: none !important;
+  }
+}
+
+/* "SEC 0N/05 · KEY-N" no canto superior direito da seção, alinhado ao container */
+.sec-tag {
+  position: absolute;
+  top: 28px;
+  right: max(var(--gutter), calc((100% - var(--container)) / 2 + var(--gutter)));
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+/*
+ * Caixa de varredura em cards e grupos. O card tem clip-path chanfrado, então
+ * a caixa (.sb) é IRMÃ do card dentro de um wrapper .scan, e não filha.
+ */
+.scan {
+  position: relative;
+  display: flex;
+}
+
+.scan > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.sb {
+  position: absolute;
+  inset: -2px;
+  z-index: 2;
+  border: 1px solid var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    inset 0.18s ease-out,
+    opacity 0.18s;
+}
+
+.sb::before {
+  content: attr(data-label);
+  position: absolute;
+  left: 10px;
+  top: -8px;
+  padding: 0 6px;
+  background: var(--section-bg, var(--bg));
+  font: 500 10px/14px var(--font-mono);
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+  color: var(--accent-text);
+}
+
+.sb::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+}
+
+.scan:hover > .sb,
+.scan:focus-within > .sb {
+  inset: -9px;
+  opacity: 1;
+}
+
+/* Caixa de varredura do título de seção: desenha uma vez ao entrar na tela */
+.sh {
+  position: relative;
+}
+
+.sh::after {
+  content: '';
+  position: absolute;
+  inset: -12px -16px;
+  border: 1px solid var(--accent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sh::before {
+  content: attr(data-label);
+  position: absolute;
+  left: -16px;
+  top: -26px;
+  z-index: 1;
+  padding: 0 6px;
+  background: var(--section-bg, var(--bg));
+  font: 500 10px/14px var(--font-mono);
+  letter-spacing: 0.16em;
+  color: var(--accent-text);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sh.scan-on::after {
+  animation: scan-box 2.6s ease-out forwards;
+}
+
+.sh.scan-on::before {
+  animation: scan-label 2.6s ease-out forwards;
+}
+
+@keyframes scan-box {
+  0% {
+    clip-path: inset(0 100% 100% 0);
+    opacity: 1;
+  }
+  35% {
+    clip-path: inset(0);
+    opacity: 1;
+  }
+  100% {
+    clip-path: inset(0);
+    opacity: 0;
+  }
+}
+
+@keyframes scan-label {
+  0%,
+  25% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Mosaico (canvas criado por mosaic.ts): acima do conteúdo, abaixo da caixa */
+[data-mosaic] {
+  position: relative;
+}
+
+.mosaic {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+@media print {
+  .mosaic,
+  .sb,
+  .band {
+    display: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .sb {
+    transition: none;
+  }
+
+  .sh.scan-on::before,
+  .sh.scan-on::after {
+    animation: none;
   }
 
   .scanlines {

@@ -2,7 +2,7 @@
  * Respostas prontas e regras de reconhecimento do chat (/conversa).
  * Sem IA e sem backend. Os textos vêm de content/perfil.ts sempre que possível.
  */
-import { contato, sobre, stack } from '../content/perfil';
+import { contato, pessoa, sobre, stack } from '../content/perfil';
 
 export type Topico =
   | 'voltar'
@@ -17,6 +17,7 @@ export type Topico =
   | 'formacao'
   | 'stack'
   | 'idiomas'
+  | 'nome'
   | 'sobre'
   | 'oi'
   | 'fallback';
@@ -69,6 +70,7 @@ export const regras: ReadonlyArray<readonly [Topico, readonly string[]]> = [
     ],
   ],
   ['idiomas', ['idioma', 'ingles', 'portugues']],
+  ['nome', ['nome', 'apelido', 'caiobasf', 'chamar']],
   ['sobre', ['sobre', 'quem', 'apresent', 'voce']],
   ['oi', ['oi', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'e ai', 'opa']],
 ];
@@ -95,6 +97,7 @@ export function reconhecer(entrada: string): Topico {
 
 export const chips: ReadonlyArray<readonly [Topico, string]> = [
   ['sobre', 'Quem é você?'],
+  ['nome', 'Seu nome?'],
   ['experiencia', 'Experiência'],
   ['projetos', 'Projetos'],
   ['stack', 'Stack'],
@@ -121,6 +124,10 @@ const linhaStack = (nome: string, rotulo = nome) =>
   `${rotulo}: ${juntar(grupo(nome).map((i) => i.replace('SQL (Postgres, MySQL)', 'SQL (Postgres e MySQL)')))}.`;
 
 export const respostas: Record<Topico, Resposta> = {
+  nome: {
+    sys: 'consultando: identidade',
+    texto: `Meu nome completo é ${pessoa.nomeCompleto}, mas na internet eu sou o ${pessoa.apelido}. Pode me chamar de ${pessoa.nome}.`,
+  },
   sobre: {
     sys: 'consultando: perfil',
     texto: sobre.paragrafo,

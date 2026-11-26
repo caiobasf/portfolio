@@ -24,6 +24,7 @@ const temPdf = fs.existsSync(path.join(process.cwd(), 'public', curriculoPdf));
       }
     </div>
 
+    <div class="scan" data-mosaic>
     <div class="card sobre__card">
       <dl class="card__inner sobre__lista">
         {
@@ -39,6 +40,8 @@ const temPdf = fs.existsSync(path.join(process.cwd(), 'public', curriculoPdf));
           ))
         }
       </dl>
+    </div>
+      <span class="sb" data-label="ALVO · PERFIL" aria-hidden="true"></span>
     </div>
   </div>
 </section>

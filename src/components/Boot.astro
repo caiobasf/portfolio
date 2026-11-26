@@ -1,5 +1,6 @@
 ---
 import { pessoa } from '../content/perfil';
+import RegMarks from './RegMarks.astro';
 
 const linhas = [
   { texto: 'CF//OS v1.0, iniciando', ok: false },
@@ -13,6 +14,8 @@ const linhas = [
 
 <div class="boot bg-grid" id="boot" role="dialog" aria-modal="true" aria-label="Inicialização do portfólio">
   <div class="scanlines" aria-hidden="true"></div>
+  <canvas class="boot__stripes" aria-hidden="true" data-boot-stripes></canvas>
+  <RegMarks class="boot__marks" size={11} dx={60} dy={44} cor="--text-3" linhas={['FREQ: 7.3 MHz', 'KEY-1']} />
   <div class="boot__box">
     <p class="boot__brand">CF<span class="accent-text">//</span>OS</p>
 
@@ -43,10 +46,26 @@ const linhas = [
 </div>
 
 <script>
-  import { initBoot } from '../scripts/boot';
+  import { initBoot, BOOT_CLASS } from '../scripts/boot';
+  import { Stripes } from '../scripts/scan-band';
+  import { getPalette } from '../scripts/palette';
 
   const overlay = document.getElementById('boot');
-  if (overlay) initBoot(overlay);
+  if (overlay && document.documentElement.classList.contains(BOOT_CLASS)) {
+    // listras do fundo: amplitude cai com o progresso (a varredura "se completa")
+    const canvas = overlay.querySelector<HTMLCanvasElement>('[data-boot-stripes]');
+    if (canvas) {
+      try {
+        new Stripes(canvas, {
+          color: () => getPalette().text,
+          amp: () => Math.max(0.08, 1.7 - 1.6 * Number(overlay.dataset.progress ?? 0)),
+        }).start();
+      } catch {
+        /* boot sem listras */
+      }
+    }
+    initBoot(overlay);
+  }
 </script>
 
 <style>
@@ -74,6 +93,21 @@ const linhas = [
 
   .boot.is-closing {
     opacity: 0;
+  }
+
+  .boot__stripes {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .boot :global(.boot__marks) {
+    position: absolute;
+    top: 32px;
+    right: 32px;
   }
 
   .boot__box {

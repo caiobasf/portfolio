@@ -1,0 +1,64 @@
+---
+/**
+ * Marcas de registro: grade 3×3 de alvos (quadrado com contorno e dois
+ * quadradinhos opostos preenchidos) e legenda mono à direita. Decorativo.
+ * Cores via style (atributos de apresentação SVG não leem variáveis CSS).
+ */
+interface Props {
+  /** lado do alvo, px */
+  size?: number;
+  /** espaçamento entre alvos, px */
+  dx?: number;
+  dy?: number;
+  /** variável de cor dos alvos */
+  cor?: '--text' | '--text-3';
+  linhas: string[];
+  class?: string;
+}
+const { size = 14, dx = 88, dy = 60, cor = '--text', linhas, class: cls } = Astro.props;
+
+const meio = Math.floor(size / 2) - 1;
+const alvos = [0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => ({ x: c * dx, y: r * dy })));
+const w = 2 * dx + size;
+const h = 2 * dy + size;
+---
+
+<div class:list={['regmarks', 'hide-sm', cls]} aria-hidden="true">
+  <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={`--rm: var(${cor})`}>
+    {
+      alvos.map(({ x, y }) => (
+        <g transform={`translate(${x},${y})`}>
+          <rect x="0.5" y="0.5" width={size - 1} height={size - 1} fill="none" style="stroke: var(--rm)" />
+          <rect x="1" y="1" width={meio} height={meio} style="fill: var(--rm)" />
+          <rect x={size - 1 - meio} y={size - 1 - meio} width={meio} height={meio} style="fill: var(--rm)" />
+        </g>
+      ))
+    }
+  </svg>
+  <p class="regmarks__legenda">
+    {linhas.map((l, i) => (i ? [<br />, l] : l))}
+  </p>
+</div>
+
+<style>
+  .regmarks {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+    pointer-events: none;
+  }
+
+  .regmarks svg {
+    display: block;
+  }
+
+  .regmarks__legenda {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.7;
+    letter-spacing: 0.16em;
+    color: var(--text-3);
+    text-align: right;
+  }
+</style>

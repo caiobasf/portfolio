@@ -1,4 +1,9 @@
 ---
+/**
+ * Cabeçalho de seção: rótulo "// 0N NOME", título e os detalhes de scanner
+ * (rótulo técnico no canto da seção e caixa de varredura que se desenha uma
+ * vez quando o título entra na tela — ver section-scan.ts e global.css).
+ */
 interface Props {
   id: string;
   numero: string;
@@ -6,9 +11,19 @@ interface Props {
   titulo: string;
 }
 const { id, numero, rotulo, titulo } = Astro.props;
+const TOTAL = '05';
+const key = Number(numero);
 ---
 
-<div class="section-head">
+<p class="sec-tag hide-sm" aria-hidden="true">SEC {numero}/{TOTAL} · KEY-{key}</p>
+<div class="section-head sh" data-label={`SCAN ${numero}/${TOTAL}`} data-section-scan>
   <p class="label">// {numero} {rotulo}</p>
   <h2 id={id} class="h2">{titulo}</h2>
 </div>
+
+<script>
+  import { initSectionScan } from '../scripts/section-scan';
+  import { afterBoot } from '../scripts/boot';
+
+  afterBoot(() => initSectionScan(Array.from(document.querySelectorAll<HTMLElement>('[data-section-scan]'))));
+</script>
