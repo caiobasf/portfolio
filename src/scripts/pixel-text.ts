@@ -13,12 +13,10 @@ const FLASH = 0.06; // duração do clarão ao revelar (fração do tempo total)
 const NOISE_RATIO = 0.1;
 const ALPHA_THRESHOLD = 90;
 
+import { getPalette, onPaletteChange } from './palette';
+
 export const prefersReducedMotion = (): boolean =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/** Lê uma variável CSS de :root (as cores vêm sempre dos tokens). */
-export const cssVar = (name: string): string =>
-  getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 /** Espera a fonte carregar, com limite de tempo (não trava se a rede falhar). */
 export async function waitForFont(font: string, timeout = 1500): Promise<void> {
@@ -225,13 +223,13 @@ export class PixelWord {
     this.stop();
     const p = this.plan(from, to);
     this.resize(p.w);
-    const pal = this.palette();
     const t0 = performance.now();
 
     return new Promise((resolve) => {
       const frame = (now: number) => {
         const t = Math.min(1, (now - t0) / duration);
-        this.drawFrame(p, t, pal);
+        // paleta lida a cada quadro: uma troca no meio da animação vale já no próximo
+        this.drawFrame(p, t, this.palette());
         if (t < 1) {
           this.raf = requestAnimationFrame(frame);
         } else {
@@ -247,6 +245,10 @@ export class PixelWord {
   stop(): void {
     if (this.raf) cancelAnimationFrame(this.raf);
     this.raf = 0;
+  }
+
+  get animating(): boolean {
+    return this.raf !== 0;
   }
 }
 
@@ -269,12 +271,10 @@ export async function initConstruo(root: HTMLElement, pairs: ReadonlyArray<reado
 
   await waitForFont(fontOf(slots[0]));
 
-  const palette = (): PixelPalette => ({
-    glyph: cssVar('--accent'),
-    cover: cssVar('--accent-deep'),
-    noise: cssVar('--pixel-noise'),
-    flash: cssVar('--accent-text'),
-  });
+  const palette = (): PixelPalette => {
+    const p = getPalette();
+    return { glyph: p.accent, cover: p['accent-dark'], noise: p.noise, flash: p['accent-text'] };
+  };
 
   const textFor = (pair: number, slot: number) => pairs[pair][slot] + (slot === 1 ? '.' : '');
 
@@ -323,6 +323,13 @@ export async function initConstruo(root: HTMLElement, pairs: ReadonlyArray<reado
       timer = window.setTimeout(next, PAUSE);
     }),
   );
+
+  // nova paleta: redesenha o estado parado (animação em curso já lê a cor nova)
+  onPaletteChange(() =>
+    words.forEach((w, i) => {
+      if (!w.animating) w.drawStatic(textFor(current, i));
+    }),
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -337,12 +344,10 @@ export async function initApelido(button: HTMLButtonElement, word: string) {
   const host = button.querySelector<HTMLElement>('[data-px-host]') ?? button;
   await waitForFont(fontOf(host));
 
-  const palette = (): PixelPalette => ({
-    glyph: cssVar('--text'),
-    cover: cssVar('--accent-dark'),
-    noise: cssVar('--pixel-noise'),
-    flash: cssVar('--accent-text'),
-  });
+  const palette = (): PixelPalette => {
+    const p = getPalette();
+    return { glyph: p.text, cover: p['accent-dark'], noise: p.noise, flash: p['accent-text'] };
+  };
 
   let pw: PixelWord;
   try {
@@ -377,4 +382,8 @@ export async function initApelido(button: HTMLButtonElement, word: string) {
       pw.drawStatic(word);
     }),
   );
+
+  onPaletteChange(() => {
+    if (!pw.animating) pw.drawStatic(word);
+  });
 }

@@ -1,17 +1,23 @@
 /**
  * Gera public/og-image.png (1200×630) e public/apple-touch-icon.png (180×180)
- * a partir de HTML, usando os tokens de src/styles/tokens.css e as fontes locais.
+ * a partir de HTML, usando as paletas (src/styles/palettes.ts), os tokens de
+ * src/styles/tokens.css e as fontes locais.
  *
  * Uso: npm run images
- * Requer Chrome ou Edge instalado (ou CHROME_PATH apontando para o executável).
+ * Requer Node com suporte a TypeScript nativo (≥ 22.18) e Chrome ou Edge
+ * instalado (ou CHROME_PATH apontando para o executável).
  */
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { paletteCss } from '../src/styles/palettes.ts';
+
+/** Paleta usada nas imagens. */
+const PALETA = 'escuro';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const tokens = readFileSync(path.join(root, 'src/styles/tokens.css'), 'utf8');
+const tokens = paletteCss() + '\n' + readFileSync(path.join(root, 'src/styles/tokens.css'), 'utf8');
 // fontes embutidas em base64: páginas criadas com setContent não carregam file://
 const font = (p) =>
   `data:font/woff2;base64,${readFileSync(path.join(root, 'node_modules', p)).toString('base64')}`;
@@ -37,12 +43,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-mono);
 .accent-text { color: var(--accent-text); }
 `;
 
-const og = `<!doctype html><html><head><meta charset="utf-8"><style>${base}
+const og = `<!doctype html><html data-palette="${PALETA}"><head><meta charset="utf-8"><style>${base}
 body {
   position: relative;
   background-image:
-    radial-gradient(ellipse 60% 70% at 88% 8%, var(--glow-wine), transparent 70%),
-    radial-gradient(ellipse 70% 80% at 8% 100%, var(--glow-teal), transparent 70%),
+    radial-gradient(ellipse 60% 70% at 88% 8%, var(--glow-a), transparent 70%),
+    radial-gradient(ellipse 70% 80% at 8% 100%, var(--glow-b), transparent 70%),
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: auto, auto, 48px 48px, 48px 48px;
@@ -66,7 +72,7 @@ h1 span { color: var(--accent); }
   <p class="role">DESENVOLVEDOR FULL STACK <span class="accent-text">//</span> SÃO PAULO, SP</p>
 </div></body></html>`;
 
-const icon = `<!doctype html><html><head><meta charset="utf-8"><style>${base}
+const icon = `<!doctype html><html data-palette="${PALETA}"><head><meta charset="utf-8"><style>${base}
 body { display: grid; place-items: center; background: var(--bg); }
 .m { width: 180px; height: 180px; display: grid; place-items: center; position: relative;
   font-family: var(--font-display); font-weight: 700; font-size: 104px; letter-spacing: -2px; padding-top: 8px; }

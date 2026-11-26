@@ -11,6 +11,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
+    "test:unit": "node --test \"tests/unit/*.test.ts\"",
     "images": "node scripts/generate-images.mjs"
   },
   "dependencies": {

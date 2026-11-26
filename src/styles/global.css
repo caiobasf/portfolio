@@ -203,7 +203,7 @@ textarea {
 }
 
 .btn--outline {
-  border-color: var(--line-control);
+  border-color: var(--line-strong);
   color: var(--text);
 }
 
@@ -238,15 +238,10 @@ textarea {
   transition: background-color 0.2s;
 }
 
-/* Hover: moldura em --accent-deep e interior elevado (texto segue ≥ 4,5:1) */
+/* Hover: só a moldura de 1px em --accent; o interior não muda (texto mantém o contraste) */
 .card--interactive:hover,
 .card--interactive:focus-within {
-  background: var(--accent-deep);
-}
-
-.card--interactive:hover > .card__inner,
-.card--interactive:focus-within > .card__inner {
-  background: var(--surface-raised);
+  background: var(--accent);
 }
 
 /* Lista com marcador em traço vermelho */

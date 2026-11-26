@@ -1,0 +1,109 @@
+---
+/**
+ * Seletor de paleta (header da landing). Troca na hora, sem recarregar; a
+ * escolha fica no localStorage (src/scripts/palette.ts).
+ * Sem JavaScript o grupo fica escondido: os botões não teriam efeito.
+ */
+import { PALETTE_IDS, palettes } from '../styles/palettes';
+
+const amostras = PALETTE_IDS.map((id) => ({
+  id,
+  nome: palettes[id].nome,
+  estilo: `--sw-bg:${palettes[id].cores.bg};--sw-accent:${palettes[id].cores.accent}`,
+}));
+---
+
+<div class="palette" role="group" aria-label="Paleta de cores" data-palette-switcher>
+  <span class="palette__label" aria-hidden="true">Paleta</span>
+  {
+    amostras.map((a) => (
+      <button
+        type="button"
+        class="palette__btn"
+        data-pal={a.id}
+        aria-label={`Paleta ${a.nome}`}
+        aria-pressed="false"
+        title={a.nome}
+      >
+        <span class="palette__sw" style={a.estilo} />
+      </button>
+    ))
+  }
+</div>
+<!-- marca a amostra ativa antes da primeira pintura -->
+<script is:inline>
+  (function () {
+    var id = document.documentElement.getAttribute('data-palette');
+    document.querySelectorAll('[data-palette-switcher] [data-pal]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-pal') === id));
+    });
+  })();
+</script>
+
+<script>
+  import { isPaletteId } from '../styles/palettes';
+  import { setPalette, onPaletteChange } from '../scripts/palette';
+
+  const group = document.querySelector<HTMLElement>('[data-palette-switcher]');
+  if (group) {
+    const buttons = Array.from(group.querySelectorAll<HTMLButtonElement>('[data-pal]'));
+    const sync = (id: string) => buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pal === id)));
+
+    buttons.forEach((b) =>
+      b.addEventListener('click', () => {
+        if (isPaletteId(b.dataset.pal)) setPalette(b.dataset.pal);
+      }),
+    );
+    onPaletteChange(sync);
+  }
+</script>
+
+<style>
+  .palette {
+    display: none;
+    align-items: center;
+  }
+
+  /* só com JavaScript (o script de paleta do <head> marca o <html>) */
+  :global(html[data-palette]) .palette {
+    display: flex;
+  }
+
+  .palette__label {
+    padding-right: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .palette__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--touch);
+    height: var(--touch);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .palette__sw {
+    display: block;
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, var(--sw-bg) 50%, var(--sw-accent) 50%);
+    border: 2px solid var(--line-strong);
+    transition: transform 0.15s;
+  }
+
+  .palette__btn:hover .palette__sw {
+    transform: scale(1.12);
+  }
+
+  .palette__btn[aria-pressed='true'] .palette__sw {
+    border-color: var(--text);
+  }
+</style>
