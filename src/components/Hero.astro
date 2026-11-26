@@ -2,6 +2,7 @@
 import { pessoa, construo } from '../content/perfil';
 
 const [primeiroA, primeiroB] = construo[0];
+const apelido = pessoa.apelido.toUpperCase();
 
 // Frase inteira para leitores de tela: "plataformas para equipes, ..., e dashboards para decisões."
 const partes = construo.map(([a, b]) => `${a} para ${b}`);
@@ -18,13 +19,19 @@ const fraseCompleta = `Eu construo ${partes.slice(0, -1).join(', ')} e ${partes.
 
     <div class="hero__id">
       <h1 id="hero-titulo" class="hero__title">
-        <span>{pessoa.nome}</span>
-        <span class="hero__surname">{pessoa.sobrenome}</span>
+        <span class="sr-only">{pessoa.nomeCompleto} ({pessoa.apelido})</span>
+        <button
+          type="button"
+          class="hero__name"
+          aria-label="Alternar entre o apelido e o nome completo"
+          data-hero-title
+          data-apelido={apelido}
+          data-nome={pessoa.nomeCompleto}
+        >
+          <span class="hero__fallback" aria-hidden="true" data-hero-fallback>{apelido}</span>
+        </button>
       </h1>
-
-      <button type="button" class="hero__nick" aria-label={pessoa.apelido} data-apelido={pessoa.apelido}>
-        <span data-px-host>{pessoa.apelido}</span>
-      </button>
+      <p class="hero__hint" aria-hidden="true">// Passe o mouse ou toque para ver o nome completo</p>
     </div>
 
     <p class="hero__role">
@@ -47,13 +54,18 @@ const fraseCompleta = `Eu construo ${partes.slice(0, -1).join(', ')} e ${partes.
 </section>
 
 <script>
-  import { initApelido, initConstruo } from '../scripts/pixel-text';
+  import { initConstruo } from '../scripts/pixel-text';
+  import { initHeroTitle } from '../scripts/hero-title';
   import { afterBoot } from '../scripts/boot';
 
   // As animações começam depois do boot, para serem vistas
   afterBoot(() => {
-    const nick = document.querySelector<HTMLButtonElement>('[data-apelido]');
-    if (nick) initApelido(nick, nick.dataset.apelido ?? '');
+    const title = document.querySelector<HTMLButtonElement>('[data-hero-title]');
+    if (title) {
+      initHeroTitle(title, { apelido: title.dataset.apelido ?? '', nome: title.dataset.nome ?? '' }).catch(() => {
+        /* fica o texto do HTML */
+      });
+    }
 
     const sub = document.querySelector<HTMLElement>('[data-construo]');
     if (sub) {
@@ -119,37 +131,50 @@ const fraseCompleta = `Eu construo ${partes.slice(0, -1).join(', ')} e ${partes.
   }
 
   .hero__title {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 0.3em;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: var(--fs-h1);
-    line-height: 0.95;
-    letter-spacing: -0.01em;
-    text-transform: uppercase;
-    color: var(--text);
+    /* tamanho do apelido; o canvas tem altura fixa de 1,5 × isto (CLS 0) */
+    --title-fs: clamp(44px, 9.4vw, 120px);
+    margin: 0;
   }
 
-  .hero__surname {
-    color: var(--accent);
-  }
-
-  .hero__nick {
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--touch);
+  .hero__name {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    height: calc(var(--title-fs) * 1.5);
     padding: 0;
     margin: 0;
     border: 0;
     background: transparent;
     cursor: pointer;
+    overflow: hidden;
     font-family: var(--font-mono);
     font-weight: 500;
-    font-size: clamp(26px, 3.4vw, 46px);
-    line-height: 1.2;
+    font-size: var(--title-fs);
+    line-height: 1.5;
     color: var(--text);
+  }
+
+  .hero__fallback {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .hero__name :global(.hero__canvas) {
+    display: block;
+    max-width: 100%;
+  }
+
+  .hero__hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  /* sem JavaScript o hover não troca nada: a dica fica invisível (sem mexer no layout) */
+  .hero__title:not(.is-pixel) + .hero__hint {
+    visibility: hidden;
   }
 
   .hero__role {

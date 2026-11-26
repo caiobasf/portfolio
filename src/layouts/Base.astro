@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import Fonts from '../components/Fonts.astro';
-import { seo } from '../content/perfil';
+import { seo, pessoa, pessoaJsonLd } from '../content/perfil';
 import {
   PALETTE_IDS,
   DEFAULT_PALETTE,
@@ -18,9 +18,11 @@ interface Props {
   noindex?: boolean;
   /** Liga o overlay de boot (só a landing) */
   boot?: boolean;
+  /** Inclui os dados estruturados Person (só a landing) */
+  person?: boolean;
 }
 
-const { title = seo.titulo, description = seo.descricao, noindex = false, boot = false } = Astro.props;
+const { title = seo.titulo, description = seo.descricao, noindex = false, boot = false, person = false } = Astro.props;
 
 const site = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(Astro.url.pathname, site).href;
@@ -74,25 +76,29 @@ var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('co
     <title>{title}</title>
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
-    <meta name="author" content="Caio Ferreira" />
+    <meta name="author" content={pessoa.nomeCompleto} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
-    <meta property="og:site_name" content="Caio Ferreira" />
+    <meta property="og:site_name" content={seo.siteName} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Caio Ferreira — Desenvolvedor Full Stack, em estilo de terminal escuro com detalhes vermelhos." />
+    <meta
+      property="og:image:alt"
+      content={`CAIOBASF — ${pessoa.cargo}, ${pessoa.local}: fundo claro com grade técnica, marcas de calibração e detalhes vermelhos.`}
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
+    {person && <script type="application/ld+json" set:html={JSON.stringify(pessoaJsonLd(canonical))} />}
   </head>
   <body>
     <slot />
