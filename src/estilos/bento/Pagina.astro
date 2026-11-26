@@ -1,0 +1,451 @@
+---
+/**
+ * Estilo "Bento": página de produto moderna e escura. Grade de cartões no hero
+ * (nome, status, local, agora, "eu construo", números, stack e contato), brilho
+ * que segue o cursor, inclinação 3D nos projetos, contagem, copiar e-mail,
+ * rolagem suave (Lenis) e revelações com ScrollTrigger.
+ *
+ * Todo o conteúdo vem de src/content/perfil.ts e fica visível sem JS.
+ */
+import './estilo.css';
+import { pessoa, contato, sobre, construo, projetos, stack, trajetoria, seo } from '../../content/perfil';
+import { globo } from './globo';
+
+const agora = trajetoria[0];
+const [agoraLugar] = agora.lugar.split(',');
+
+const secoes = [
+  { id: 'sobre', rotulo: 'Sobre' },
+  { id: 'projetos', rotulo: 'Projetos' },
+  { id: 'stack', rotulo: 'Stack' },
+  { id: 'trajetoria', rotulo: 'Trajetória' },
+];
+
+const fitaA = [...stack[0].itens, ...stack[1].itens, ...stack[2].itens];
+const fitaB = [...stack[3].itens, ...stack[4].itens];
+
+/** Mão estilizada (21 pontos) para o visual do Libralizei. Arte original. */
+const mao: [number, number][] = [
+  [150, 272],
+  [114, 248], [86, 220], [66, 192], [50, 166],
+  [118, 172], [110, 124], [106, 92], [103, 62],
+  [148, 166], [148, 112], [148, 76], [148, 42],
+  [176, 170], [184, 122], [188, 90], [191, 62],
+  [200, 184], [216, 146], [224, 120], [230, 96],
+];
+const ossos: [number, number][] = [
+  [0, 1], [1, 2], [2, 3], [3, 4],
+  [0, 5], [5, 6], [6, 7], [7, 8],
+  [5, 9], [9, 10], [10, 11], [11, 12],
+  [9, 13], [13, 14], [14, 15], [15, 16],
+  [13, 17], [17, 18], [18, 19], [19, 20], [0, 17],
+];
+
+/** Barras do painel do Oracle Discovery Data (decorativo). */
+const barras = [38, 52, 44, 68, 58, 80, 64, 90, 72, 96, 84, 100];
+const linhaGrafico = barras
+  .map((b, i) => `${i ? 'L' : 'M'}${(14 + i * 24).toFixed(0)} ${(118 - b * 0.9).toFixed(1)}`)
+  .join('');
+
+const tamanhosStack = ['b-span-2', '', '', 'b-span-2', 'b-span-2', ''];
+const pad = (i: number) => String(i + 1).padStart(2, '0');
+---
+
+<a class="b-pular" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="b-aurora" aria-hidden="true">
+  <div class="b-aurora__blob b-aurora__blob--a"></div>
+  <div class="b-aurora__blob b-aurora__blob--b"></div>
+  <div class="b-aurora__blob b-aurora__blob--c"></div>
+  <div class="b-aurora__grade"></div>
+</div>
+
+<header class="b-topo">
+  <nav class="b-nav" aria-label="Seções">
+    <a class="b-marca" href="#inicio">
+      <span class="b-marca__logo" aria-hidden="true">CF</span>
+      <span class="b-marca__nome">{pessoa.apelido}</span><span class="b-sr"> — início</span>
+    </a>
+    <ul class="b-nav__lista">
+      {
+        secoes.map((s) => (
+          <li>
+            <a href={`#${s.id}`} data-nav={s.id}>
+              {s.rotulo}
+            </a>
+          </li>
+        ))
+      }
+      <li>
+        <a class="b-nav__cta" href="#contato" data-nav="contato">Contato</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<main id="conteudo" tabindex="-1">
+  <section class="b-hero" id="inicio" aria-labelledby="b-nome">
+    <div class="b-bento" data-spot>
+      <article class="b-card b-intro" data-hero>
+        <p class="b-rotulo"><span class="b-ponto-grad" aria-hidden="true"></span> Portfólio · {pessoa.apelido}</p>
+        <h1 id="b-nome" class="b-h1">
+          <span class="b-grad-texto">{pessoa.nomeCurto}</span>
+        </h1>
+        <p class="b-intro__completo">{pessoa.nomeCompleto}</p>
+        <p class="b-intro__cargo">{pessoa.cargo}</p>
+        <p class="b-intro__desc">{seo.descricao}</p>
+        <div class="b-intro__acoes">
+          <a class="b-botao b-botao--grad" href="#projetos">
+            Ver projetos
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </a>
+          <a class="b-botao" href="/conversa">Conversar com o chat</a>
+        </div>
+      </article>
+
+      <article class="b-card b-status" data-hero>
+        <span class="b-radar" aria-hidden="true"><span></span><span></span><span></span><i></i></span>
+        <p class="b-rotulo">Status</p>
+        <p class="b-status__texto"><span class="b-pulso" aria-hidden="true"></span>{pessoa.status}</p>
+      </article>
+
+      <article class="b-card b-local" data-hero>
+        <p class="b-rotulo">Local</p>
+        <svg class="b-globo" viewBox="2 2 196 196" aria-hidden="true">
+          <defs>
+            <radialGradient id="b-globo-luz" cx="38%" cy="30%" r="75%">
+              <stop offset="0" stop-color="#2a2547"></stop>
+              <stop offset="1" stop-color="#0c0c10"></stop>
+            </radialGradient>
+            <linearGradient id="b-globo-borda" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#8b7bff"></stop>
+              <stop offset=".5" stop-color="#5ce1e6"></stop>
+              <stop offset="1" stop-color="#ff7ac6"></stop>
+            </linearGradient>
+            <pattern id="b-globo-pontos" width="4.2" height="4.2" patternUnits="userSpaceOnUse">
+              <circle cx="2.1" cy="2.1" r="1.05" fill="#a99dff"></circle>
+            </pattern>
+            <clipPath id="b-globo-clip"><circle cx={globo.c} cy={globo.c} r={globo.r}></circle></clipPath>
+          </defs>
+          <circle cx={globo.c} cy={globo.c} r={globo.r + 8} fill="none" stroke="url(#b-globo-borda)" stroke-opacity=".18"></circle>
+          <circle cx={globo.c} cy={globo.c} r={globo.r} fill="url(#b-globo-luz)"></circle>
+          <g clip-path="url(#b-globo-clip)">
+            <path d={globo.graticule} fill="none" stroke="#ffffff" stroke-opacity=".09" stroke-width=".7"></path>
+            <path d={globo.continente} fill="url(#b-globo-pontos)" opacity=".85"></path>
+            <path d={globo.continente} fill="none" stroke="#8b7bff" stroke-opacity=".35" stroke-width=".8"></path>
+          </g>
+          <circle cx={globo.c} cy={globo.c} r={globo.r} fill="none" stroke="url(#b-globo-borda)" stroke-width="1.2" stroke-opacity=".7"></circle>
+          <g class="b-pino" transform={`translate(${globo.sp.x.toFixed(1)} ${globo.sp.y.toFixed(1)})`}>
+            <circle class="b-pino__onda" r="5" fill="none" stroke="#5ce1e6"></circle>
+            <circle class="b-pino__onda b-pino__onda--2" r="5" fill="none" stroke="#5ce1e6"></circle>
+            <circle r="4.2" fill="#5ce1e6"></circle>
+            <circle r="1.7" fill="#0a0a0b"></circle>
+          </g>
+        </svg>
+        <p class="b-local__texto">{pessoa.local}</p>
+        <p class="b-mono b-suave">23,5° S · 46,6° O</p>
+      </article>
+
+      <article class="b-card b-agora" data-hero>
+        <p class="b-rotulo">Agora</p>
+        <ul class="b-agora__techs" aria-label="Tecnologias do dia a dia">
+          {['Next.js', 'TypeScript', 'PostgreSQL'].map((t) => <li>{t}</li>)}
+        </ul>
+        <p class="b-agora__cargo">{agora.cargo}</p>
+        <p class="b-agora__lugar">{agoraLugar}</p>
+        <p class="b-mono b-suave">{agora.periodo}</p>
+      </article>
+
+      <article class="b-card b-construo" data-hero>
+        <p class="b-rotulo">O que eu faço</p>
+        <p class="b-construo__frase" aria-hidden="true">
+          <span class="b-construo__fixo">Eu construo</span>{' '}
+          <span class="b-troca" data-troca="a"><span class="b-troca__palavra b-grad-texto">{construo[0][0]}</span></span>{' '}
+          <span class="b-construo__fixo">para</span>{' '}
+          <span class="b-troca" data-troca="b"><span class="b-troca__palavra">{construo[0][1]}</span></span><span>.</span>
+        </p>
+        <p class="b-sr">
+          Eu construo {construo.map(([a, b], i) => `${a} para ${b}${i < construo.length - 1 ? ', ' : '.'}`).join('')}
+        </p>
+        <div class="b-construo__marcas" aria-hidden="true">
+          {construo.map((_, i) => <span class:list={['b-marcador', { 'is-ativo': i === 0 }]} />)}
+        </div>
+      </article>
+
+      <article class="b-card b-num b-num--a" data-hero>
+        <p class="b-num__valor"><span data-conta="100">100</span>+</p>
+        <p class="b-num__rotulo">usuários ativos simultâneos</p>
+        <p class="b-mono b-suave">Plataforma web</p>
+      </article>
+
+      <article class="b-card b-num b-num--b" data-hero>
+        <p class="b-num__valor"><span data-conta="400">400</span>+</p>
+        <p class="b-num__rotulo">holerites automatizados por mês</p>
+        <p class="b-mono b-suave">API do Microsoft Graph</p>
+      </article>
+
+      <article class="b-card b-fita" data-hero>
+        <p class="b-rotulo">Stack <a class="b-fita__link" href="#stack">ver tudo <span aria-hidden="true">→</span></a></p>
+        <div class="b-fita__trilhos" aria-hidden="true">
+          <div class="b-fita__trilho">
+            {
+              [0, 1].map((copia) => (
+                <div class:list={['b-fita__grupo', { 'b-fita__copia': copia }]}>
+                  {fitaA.map((t) => (
+                    <span class="b-chip b-chip--css" data-t={t} />
+                  ))}
+                </div>
+              ))
+            }
+          </div>
+          <div class="b-fita__trilho b-fita__trilho--rev">
+            {
+              [0, 1].map((copia) => (
+                <div class:list={['b-fita__grupo', { 'b-fita__copia': copia }]}>
+                  {fitaB.map((t) => (
+                    <span class="b-chip b-chip--css" data-t={t} />
+                  ))}
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </article>
+
+      <article class="b-card b-contato-mini" data-hero>
+        <p class="b-rotulo">Contato</p>
+        <a class="b-contato-mini__email" href={`mailto:${contato.email}`}>{contato.email}</a>
+        <div class="b-contato-mini__acoes">
+          <button class="b-botao b-botao--peq" type="button" data-copiar hidden>
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="5" y="5" width="8.5" height="8.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"></rect><path d="M10.5 3.2V3a1.5 1.5 0 0 0-1.5-1.5H3.5A1.5 1.5 0 0 0 2 3v5.5A1.5 1.5 0 0 0 3.5 10h.3" fill="none" stroke="currentColor" stroke-width="1.4"></path></svg>
+            Copiar e-mail
+          </button>
+          <a class="b-link-seta" href={contato.linkedin.url} rel="me noopener" target="_blank">LinkedIn <span aria-hidden="true">↗</span><span class="b-sr"> (abre em nova aba)</span></a>
+          <a class="b-link-seta" href={contato.github.url} rel="me noopener" target="_blank">GitHub <span aria-hidden="true">↗</span><span class="b-sr"> (abre em nova aba)</span></a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="b-secao" id="sobre" aria-labelledby="b-t-sobre">
+    <div class="b-cabeca" data-revela>
+      <h2 id="b-t-sobre" class="b-h2"><span class="b-h2__num" aria-hidden="true">01</span> Sobre</h2>
+      <p class="b-cabeca__lead">Um pouco de contexto sobre quem escreve o código.</p>
+    </div>
+    <div class="b-sobre" data-spot>
+      <article class="b-card b-sobre__texto" data-revela>
+        <p class="b-rotulo">Em poucas linhas</p>
+        <p class="b-sobre__paragrafo">{sobre.paragrafo}</p>
+      </article>
+      {
+        sobre.resumo.map((r, i) => (
+          <article class="b-card b-resumo" data-revela>
+            <p class="b-rotulo">
+              <span class="b-mono">{pad(i)}</span> {r.rotulo}
+            </p>
+            {r.linhas.map((l, j) => (
+              <p class:list={[j === 0 ? 'b-resumo__forte' : 'b-resumo__suave']}>{l}</p>
+            ))}
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="b-secao" id="projetos" aria-labelledby="b-t-projetos">
+    <div class="b-cabeca" data-revela>
+      <h2 id="b-t-projetos" class="b-h2"><span class="b-h2__num" aria-hidden="true">02</span> Projetos</h2>
+      <p class="b-cabeca__lead">Coisas que saíram do papel, do protótipo ao palco.</p>
+    </div>
+    <div class="b-projetos" data-spot>
+      {
+        projetos.map((p, i) => (
+          <article class:list={['b-card', 'b-projeto', `b-projeto--${p.id}`]} data-revela data-tilt>
+            <div class="b-projeto__texto">
+              <p class="b-projeto__codigo b-mono">{p.codigo}</p>
+              <ul class="b-meta" aria-label="Detalhes">
+                {p.meta.map((m) => (
+                  <li>{m}</li>
+                ))}
+              </ul>
+              <h3 class="b-projeto__nome">{p.nome}</h3>
+              <ul class="b-projeto__itens">
+                {p.itens.map((it) => (
+                  <li>{it}</li>
+                ))}
+              </ul>
+              <ul class="b-tags" aria-label="Tecnologias">
+                {p.tags.map((t) => (
+                  <li class="b-chip">{t}</li>
+                ))}
+              </ul>
+              {p.links.length > 0 && (
+                <p class="b-projeto__links">
+                  {p.links.map((l) => (
+                    <a class="b-link-seta" href={l.url} rel="noopener" target="_blank">
+                      {l.rotulo} <span aria-hidden="true">↗</span>
+                    </a>
+                  ))}
+                </p>
+              )}
+            </div>
+            <div class="b-projeto__visual" aria-hidden="true">
+              {i === 0 ? (
+                <svg class="b-mao" viewBox="0 0 300 300">
+                  <defs>
+                    <linearGradient id="b-mao-grad" x1="0" y1="1" x2="1" y2="0">
+                      <stop offset="0" stop-color="#8b7bff" />
+                      <stop offset=".55" stop-color="#5ce1e6" />
+                      <stop offset="1" stop-color="#ff7ac6" />
+                    </linearGradient>
+                  </defs>
+                  <g class="b-mao__moldura" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="1.5">
+                    <path d="M24 54V24h30M246 24h30v30M276 246v30h-30M54 276H24v-30" />
+                  </g>
+                  <line class="b-mao__varredura" x1="30" x2="270" y1="40" y2="40" stroke="url(#b-mao-grad)" stroke-width="1.5" />
+                  <g fill="none" stroke="url(#b-mao-grad)" stroke-width="2.2" stroke-linecap="round" class="b-mao__ossos">
+                    {ossos.map(([a, b]) => (
+                      <line x1={mao[a][0]} y1={mao[a][1]} x2={mao[b][0]} y2={mao[b][1]} />
+                    ))}
+                  </g>
+                  <g class="b-mao__pontos">
+                    {mao.map(([x, y], k) => (
+                      <circle cx={x} cy={y} r={k % 4 === 0 ? 5 : 3.6} style={`--i:${k}`} />
+                    ))}
+                  </g>
+                  <g class="b-mao__hud" font-family="Geist Mono Variable, monospace" font-size="11" fill="#c8c8d0">
+                    <text x="30" y="292">sinal reconhecido</text>
+                    <text x="270" y="292" text-anchor="end" fill="#5ce1e6">75%</text>
+                  </g>
+                </svg>
+              ) : (
+                <svg class="b-painel" viewBox="0 0 300 300">
+                  <defs>
+                    <linearGradient id="b-barra-grad" x1="0" y1="1" x2="0" y2="0">
+                      <stop offset="0" stop-color="#8b7bff" stop-opacity=".25" />
+                      <stop offset="1" stop-color="#8b7bff" />
+                    </linearGradient>
+                    <linearGradient id="b-linha-grad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0" stop-color="#5ce1e6" />
+                      <stop offset="1" stop-color="#ff7ac6" />
+                    </linearGradient>
+                  </defs>
+                  <rect x="12" y="14" width="276" height="150" rx="14" fill="#16161a" stroke="#ffffff" stroke-opacity=".08" />
+                  <text x="28" y="40" font-family="Geist Mono Variable, monospace" font-size="11" fill="#c8c8d0">dados reais</text>
+                  <text x="272" y="40" text-anchor="end" font-family="Geist Variable, sans-serif" font-size="16" font-weight="600" fill="#ededed">1.000+</text>
+                  <g transform="translate(18 26)">
+                    {barras.map((b, k) => (
+                      <rect class="b-painel__barra" x={4 + k * 24} y={118 - b * 0.9} width="14" height={b * 0.9} rx="3" fill="url(#b-barra-grad)" />
+                    ))}
+                    <path class="b-painel__linha" d={linhaGrafico} fill="none" stroke="url(#b-linha-grad)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                  </g>
+                  <rect x="12" y="178" width="132" height="108" rx="14" fill="#16161a" stroke="#ffffff" stroke-opacity=".08" />
+                  <g transform="translate(78 232)">
+                    <circle r="30" fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-width="10" />
+                    <circle class="b-painel__rosca" r="30" fill="none" stroke="url(#b-linha-grad)" stroke-width="10" stroke-dasharray="188.5" stroke-dashoffset="52" stroke-linecap="round" transform="rotate(-90)" />
+                  </g>
+                  <rect x="156" y="178" width="132" height="108" rx="14" fill="#16161a" stroke="#ffffff" stroke-opacity=".08" />
+                  <text x="172" y="204" font-family="Geist Mono Variable, monospace" font-size="11" fill="#c8c8d0">pitch</text>
+                  <text x="172" y="236" font-family="Geist Variable, sans-serif" font-size="22" font-weight="600" fill="#ededed">no palco</text>
+                  <rect x="172" y="252" width="100" height="6" rx="3" fill="#ffffff" fill-opacity=".08" />
+                  <rect class="b-painel__prog" x="172" y="252" width="76" height="6" rx="3" fill="url(#b-linha-grad)" />
+                </svg>
+              )}
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="b-secao" id="stack" aria-labelledby="b-t-stack">
+    <div class="b-cabeca" data-revela>
+      <h2 id="b-t-stack" class="b-h2"><span class="b-h2__num" aria-hidden="true">03</span> Stack</h2>
+      <p class="b-cabeca__lead">As ferramentas do dia a dia, por categoria.</p>
+    </div>
+    <div class="b-stack" data-spot>
+      {
+        stack.map((g, i) => (
+          <article class:list={['b-card', 'b-grupo', tamanhosStack[i]]} data-revela>
+            <div class="b-grupo__topo">
+              <h3 class="b-grupo__nome">{g.grupo}</h3>
+              <span class="b-mono b-suave">
+                {String(g.itens.length).padStart(2, '0')} {g.itens.length === 1 ? 'item' : 'itens'}
+              </span>
+            </div>
+            <ul class="b-tags">
+              {g.itens.map((t) => (
+                <li class="b-chip">{t}</li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="b-secao" id="trajetoria" aria-labelledby="b-t-trajetoria">
+    <div class="b-cabeca" data-revela>
+      <h2 id="b-t-trajetoria" class="b-h2"><span class="b-h2__num" aria-hidden="true">04</span> Trajetória</h2>
+      <p class="b-cabeca__lead">Por onde passei até aqui.</p>
+    </div>
+    <div data-spot>
+      <article class="b-card b-linha" data-revela>
+        <ol class="b-linha__lista">
+          {
+            trajetoria.map((t, i) => (
+              <li class:list={['b-etapa', { 'is-atual': i === 0 }]} data-revela>
+                <p class="b-etapa__periodo b-mono">{t.periodo}</p>
+                <span class="b-etapa__no" aria-hidden="true" />
+                <div class="b-etapa__corpo">
+                  <h3 class="b-etapa__cargo">{t.cargo}</h3>
+                  <p class="b-etapa__lugar">{t.lugar}</p>
+                  {t.itens.length > 0 && (
+                    <ul class="b-etapa__itens">
+                      {t.itens.map((it) => (
+                        <li>{it}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section class="b-secao" id="contato" aria-labelledby="b-t-contato">
+    <div data-spot>
+      <article class="b-card b-final" data-revela>
+        <div class="b-final__brilho" aria-hidden="true"></div>
+        <h2 id="b-t-contato" class="b-h2"><span class="b-h2__num" aria-hidden="true">05</span> Contato</h2>
+        <p class="b-final__titulo">Vamos construir algo <span class="b-grad-texto">juntos?</span></p>
+        <p class="b-final__texto">{pessoa.status}. O jeito mais rápido de falar comigo é por e-mail.</p>
+        <a class="b-final__email" href={`mailto:${contato.email}`}>{contato.email}</a>
+        <div class="b-final__acoes">
+          <button class="b-botao b-botao--grad" type="button" data-copiar hidden>
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect x="5" y="5" width="8.5" height="8.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"></rect><path d="M10.5 3.2V3a1.5 1.5 0 0 0-1.5-1.5H3.5A1.5 1.5 0 0 0 2 3v5.5A1.5 1.5 0 0 0 3.5 10h.3" fill="none" stroke="currentColor" stroke-width="1.4"></path></svg>
+            Copiar e-mail
+          </button>
+          <a class="b-botao" href={contato.linkedin.url} rel="me noopener" target="_blank">{contato.linkedin.rotulo} <span aria-hidden="true">↗</span><span class="b-sr"> (abre em nova aba)</span></a>
+          <a class="b-botao" href={contato.github.url} rel="me noopener" target="_blank">{contato.github.rotulo} <span aria-hidden="true">↗</span><span class="b-sr"> (abre em nova aba)</span></a>
+          <a class="b-botao" href="/conversa">Conversar com o chat</a>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="b-rodape">
+  <p>© 2026 {pessoa.nomeCurto} · {pessoa.local}</p>
+  <a class="b-link-seta" href="#inicio">Voltar ao topo <span aria-hidden="true">↑</span></a>
+</footer>
+
+<div class="b-toast" role="status" aria-live="polite"></div>
+
+<script>
+  import { iniciar } from './main';
+  iniciar();
+</script>

@@ -1,0 +1,321 @@
+---
+/**
+ * Estilo "brutalista": neo-brutalismo / anti-design.
+ * Bordas pretas grossas, sombras duras sem desfoque, cores chapadas,
+ * adesivos arrastáveis e um letreiro rolante. Sem JS tudo fica legível e
+ * parado; o main.ts acrescenta as animações (GSAP) e os adesivos que se arrastam.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { pessoa, contato, sobre, construo, projetos, stack, trajetoria, curriculoPdf } from '../../content/perfil';
+import './brutalista.css';
+
+const temPdf = fs.existsSync(path.join(process.cwd(), 'public', curriculoPdf));
+const [a0, b0] = construo[0];
+
+// estrela de 18 pontas para o selo
+const pontas = 18;
+const estrela = Array.from({ length: pontas * 2 }, (_, i) => {
+  const r = i % 2 === 0 ? 100 : 82;
+  const a = (Math.PI * i) / pontas - Math.PI / 2;
+  return `${(110 + r * Math.cos(a)).toFixed(1)},${(110 + r * Math.sin(a)).toFixed(1)}`;
+}).join(' ');
+
+const cores = ['amarelo', 'rosa', 'azul', 'verde', 'laranja'] as const;
+const cor = (i: number) => cores[i % cores.length];
+const coresTag = (fundo: string) => cores.filter((c) => c !== fundo);
+const giros = [-3, 2, -1.5, 3.5, -2.5, 1.5, -4, 2.5];
+const giro = (i: number) => giros[i % giros.length];
+const totalStack = stack.reduce((n, g) => n + g.itens.length, 0);
+const ticker = stack.flatMap((g) => g.itens);
+const nav = [
+  { href: '#sobre', rotulo: 'Sobre' },
+  { href: '#projetos', rotulo: 'Projetos' },
+  { href: '#stack', rotulo: 'Stack' },
+  { href: '#trajetoria', rotulo: 'Trajetória' },
+  { href: '#contato', rotulo: 'Contato' },
+];
+---
+
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <a class="marca" href="#inicio" aria-label={`${pessoa.apelido}, voltar ao início`}>
+    <span aria-hidden="true">{pessoa.apelido}</span>
+  </a>
+  <nav class="menu" aria-label="Seções">
+    <ul>
+      {
+        nav.map((n, i) => (
+          <li>
+            <a href={n.href} class={`chip-nav c-${cor(i)}`}>
+              {n.rotulo}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+  <button type="button" class="pausa" data-pausa aria-pressed="false" data-so-js hidden>
+    <span class="pausa-icone" aria-hidden="true"></span>
+    <span data-pausa-rotulo>Pausar animações</span>
+  </button>
+</header>
+
+<main id="conteudo" tabindex="-1">
+  <section class="palco" id="inicio" aria-labelledby="nome">
+    <p class="oi">Oi! Eu sou o</p>
+    <h1 class="nome" id="nome">
+      <span class="nome-l1" data-letras>Caio</span>{' '}
+      <span class="nome-l2"><span data-letras>Ferreira</span></span>
+    </h1>
+
+    <p class="selo" data-selo>
+      <svg class="selo-estrela" viewBox="0 0 220 220" aria-hidden="true">
+        <polygon points={estrela} transform="translate(7 7)" fill="#000"></polygon>
+        <polygon points={estrela} fill="#ff5ca8" stroke="#000" stroke-width="5" stroke-linejoin="round"></polygon>
+      </svg>
+      <span class="selo-texto">{pessoa.status}!</span>
+    </p>
+
+    <p class="construo" data-construo>
+      <span class="construo-fixo">Eu construo</span>
+      <span class="slot slot-a"><span class="slot-palavra" data-slot-a>{a0}</span></span>
+      <span class="construo-grupo">
+        <span class="construo-fixo">para</span>
+        <span class="slot slot-b"><span class="slot-palavra" data-slot-b>{b0}</span></span><span class="construo-fixo">.</span>
+      </span>
+    </p>
+
+    <ul class="meta">
+      <li class="chip c-azul">{pessoa.cargo}</li>
+      <li class="chip c-verde">{pessoa.local}</li>
+      <li class="chip c-branco">{pessoa.nomeCompleto}</li>
+    </ul>
+
+    <div class="acoes">
+      <a class="botao c-amarelo" href="#projetos">Ver projetos <span aria-hidden="true">↓</span></a>
+      <a class="botao c-rosa" href={`mailto:${contato.email}`}>Mandar e-mail <span aria-hidden="true">→</span></a>
+      <a class="botao c-branco" href="/conversa">Conversar comigo</a>
+    </div>
+
+    <div class="adesivos" aria-hidden="true">
+      <svg class="adesivo adesivo-estrela" viewBox="0 0 120 120" data-adesivo>
+        <path
+          d="M60 6l15 34 37 4-28 25 8 37-32-19-32 19 8-37L8 44l37-4z"
+          fill="#ffd23f"
+          stroke="#000"
+          stroke-width="6"
+          stroke-linejoin="round"></path>
+        <circle cx="48" cy="60" r="5"></circle>
+        <circle cx="72" cy="60" r="5"></circle>
+        <path d="M48 74q12 10 24 0" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round"></path>
+      </svg>
+      <svg class="adesivo adesivo-seta" viewBox="0 0 160 90" data-adesivo>
+        <path
+          d="M6 32h86V8l62 37-62 37V58H6z"
+          fill="#3a86ff"
+          stroke="#000"
+          stroke-width="6"
+          stroke-linejoin="round"></path>
+      </svg>
+      <svg class="adesivo adesivo-bolha" viewBox="0 0 130 120" data-adesivo>
+        <path
+          d="M66 6c30 0 58 18 58 50 0 34-24 58-58 58S6 96 6 62C6 30 34 6 66 6z"
+          transform="rotate(-8 65 60)"
+          fill="#06d6a0"
+          stroke="#000"
+          stroke-width="6"></path>
+        <ellipse cx="48" cy="52" rx="7" ry="11"></ellipse>
+        <ellipse cx="82" cy="50" rx="7" ry="11"></ellipse>
+        <path d="M40 76q26 24 52-2" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round"></path>
+      </svg>
+      <svg class="adesivo adesivo-raio" viewBox="0 0 90 140" data-adesivo>
+        <path
+          d="M52 4L8 78h30l-10 58 54-82H50l14-50z"
+          fill="#ff7a00"
+          stroke="#000"
+          stroke-width="6"
+          stroke-linejoin="round"></path>
+      </svg>
+      <p class="adesivo-dica" data-so-js hidden>↖ arraste os adesivos</p>
+    </div>
+  </section>
+
+  <div class="letreiro-moldura" aria-hidden="true">
+  <div class="letreiro" data-letreiro>
+    <div class="letreiro-trilho" data-trilho>
+      {
+        [0, 1].map(() => (
+          <ul>
+            {ticker.map((t) => (
+              <li>
+                {t}
+                <span class="letreiro-estrela">✱</span>
+              </li>
+            ))}
+          </ul>
+        ))
+      }
+    </div>
+  </div>
+  </div>
+
+  <section class="secao sobre" id="sobre" aria-labelledby="h-sobre">
+    <h2 class="titulo" id="h-sobre"><span class="titulo-num" aria-hidden="true">01</span> Sobre</h2>
+    <div class="sobre-grade">
+      <p class="sobre-texto cartao c-branco" data-pop>{sobre.paragrafo}</p>
+      <dl class="resumo">
+        {
+          sobre.resumo.map((r, i) => (
+            <div class={`resumo-item cartao c-${cor(i)}`} style={`--giro:${giro(i + 2)}deg`} data-pop>
+              <dt>{r.rotulo}</dt>
+              {r.linhas.map((l) => (
+                <dd>{l}</dd>
+              ))}
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+    {
+      temPdf && (
+        <p class="sobre-pdf">
+          <a class="botao c-laranja" href={curriculoPdf} download>
+            Baixar currículo (PDF)
+          </a>
+        </p>
+      )
+    }
+  </section>
+
+  <section class="secao projetos" id="projetos" aria-labelledby="h-projetos">
+    <h2 class="titulo" id="h-projetos"><span class="titulo-num" aria-hidden="true">02</span> Projetos</h2>
+    <div class="projetos-lista">
+      {
+        projetos.map((p, i) => (
+          <article class={`projeto c-${i % 2 === 0 ? 'rosa' : 'azul'}`} data-pop>
+            <p class="projeto-num" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </p>
+            <div class="projeto-corpo">
+              <p class="projeto-codigo">{p.codigo}</p>
+              <h3 class="projeto-nome">{p.nome}</h3>
+              <ul class="projeto-meta">
+                {p.meta.map((m) => (
+                  <li>{m}</li>
+                ))}
+              </ul>
+              <ul class="projeto-tags" aria-label="Tecnologias">
+                {p.tags.map((t, k) => (
+                  <li class={`tag c-${coresTag(i % 2 === 0 ? 'rosa' : 'azul')[k % 4]}`} style={`--giro:${giro(k + i)}deg`}>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+              <ul class="projeto-itens">
+                {p.itens.map((it) => (
+                  <li>{it}</li>
+                ))}
+              </ul>
+              {p.links.length > 0 && (
+                <p class="projeto-links">
+                  {p.links.map((l) => (
+                    <a class="botao c-branco" href={l.url} target="_blank" rel="noopener noreferrer">
+                      {l.rotulo}
+                    </a>
+                  ))}
+                </p>
+              )}
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="secao stack" id="stack" aria-labelledby="h-stack">
+    <h2 class="titulo" id="h-stack"><span class="titulo-num" aria-hidden="true">03</span> Stack</h2>
+    <p class="stack-total"><strong>{totalStack}</strong> ferramentas em {stack.length} grupos. Nenhuma delas é enfeite.</p>
+    <div class="stack-grade">
+      {
+        stack.map((g, i) => (
+          <section class={`bloco c-${cor(i + 1)} bloco-${i}`} aria-labelledby={`g-${i}`} data-pop>
+            <div class="bloco-cab">
+              <h3 id={`g-${i}`}>{g.grupo}</h3>
+              <span class="bloco-qtd" aria-label={`${g.itens.length} itens`}>
+                {String(g.itens.length).padStart(2, '0')}
+              </span>
+            </div>
+            <ul>
+              {g.itens.map((t) => (
+                <li>{t}</li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="secao trajetoria" id="trajetoria" aria-labelledby="h-trajetoria">
+    <h2 class="titulo" id="h-trajetoria"><span class="titulo-num" aria-hidden="true">04</span> Trajetória</h2>
+    <ol class="fichas">
+      {
+        trajetoria.map((t, i) => (
+          <li class="ficha" style={`--giro:${[-1.5, 1.2, -0.8][i % 3]}deg`} data-pop>
+            <p class={`ficha-periodo c-${cor(i + 3)}`}>{t.periodo}</p>
+            <h3 class="ficha-cargo">{t.cargo}</h3>
+            <p class="ficha-lugar">{t.lugar}</p>
+            {t.itens.length > 0 && (
+              <ul class="ficha-itens">
+                {t.itens.map((it) => (
+                  <li>{it}</li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="secao contato" id="contato" aria-labelledby="h-contato">
+    <div class="contato-bloco" data-pop>
+      <h2 class="contato-titulo" id="h-contato">Bora conversar?</h2>
+      <p class="contato-email">
+        <a href={`mailto:${contato.email}`} data-email>{contato.email}</a>
+      </p>
+      <div class="contato-acoes">
+        <button type="button" class="botao c-amarelo botao-grande" data-copiar data-so-js hidden>Copiar</button>
+        <a class="botao c-branco botao-grande" href={`mailto:${contato.email}`}>Escrever e-mail</a>
+      </div>
+      <ul class="contato-redes">
+        <li>
+          <a class="botao c-azul" href={contato.linkedin.url} target="_blank" rel="noopener noreferrer">
+            LinkedIn <span class="rede-rotulo">{contato.linkedin.rotulo}</span>
+          </a>
+        </li>
+        <li>
+          <a class="botao c-verde" href={contato.github.url} target="_blank" rel="noopener noreferrer">
+            GitHub <span class="rede-rotulo">{contato.github.rotulo}</span>
+          </a>
+        </li>
+        <li>
+          <a class="botao c-laranja" href="/conversa">Conversar no chat</a>
+        </li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <p>© {new Date().getFullYear()} {pessoa.nomeCurto}. Feito com bordas grossas e zero desfoque.</p>
+  <a class="botao c-amarelo" href="#inicio">Voltar ao topo <span aria-hidden="true">↑</span></a>
+</footer>
+
+<p class="aviso" role="status" aria-live="polite" data-aviso></p>
+
+<script>
+  import './main';
+</script>

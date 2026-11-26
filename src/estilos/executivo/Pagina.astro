@@ -1,0 +1,516 @@
+---
+/**
+ * Estilo "executivo": relatório anual de consultoria / banco privado.
+ * Todo o texto do currículo vem de src/content/perfil.ts. Os números em
+ * destaque são extraídos de frases que EXISTEM no perfil (o build falha se a
+ * frase sumir), e cada um cita de onde veio.
+ *
+ * Sem JS a página é completa. O script (main.ts) acrescenta rolagem suave,
+ * linhas que se desenham, contagem dos números e o botão de imprimir.
+ */
+import './executivo.css';
+import { pessoa, contato, sobre, construo, projetos, stack, trajetoria } from '../../content/perfil';
+import { guilhoche, GUILHOCHE_TAMANHO } from './guilhoche';
+
+const agora = new Date();
+const ano = agora.getFullYear();
+const mesAno = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(agora);
+const dataEdicao = mesAno.charAt(0).toUpperCase() + mesAno.slice(1);
+const pad = (n: number) => String(n).padStart(2, '0');
+const nf = new Intl.NumberFormat('pt-BR');
+
+/** procura a frase do perfil que sustenta um número; falha o build se não existir */
+function frase(itens: readonly string[], trecho: string, origem: string): string {
+  const f = itens.find((i) => i.includes(trecho));
+  if (!f) throw new Error(`[executivo] destaque sem fonte: "${trecho}" em ${origem}`);
+  return f;
+}
+
+const theLed = trajetoria[0];
+const empresa = theLed.lugar.split(',')[0];
+const libralizei = projetos.find((p) => p.id === 'libralizei') ?? projetos[0];
+const oracle = projetos.find((p) => p.id === 'oracle') ?? projetos[1];
+
+const destaques = [
+  {
+    valor: 100,
+    prefixo: '',
+    sufixo: '+',
+    rotulo: 'usuários ativos simultâneos',
+    fonte: `Experiência · ${empresa}`,
+    nota: frase(theLed.itens, '100 usuários', empresa),
+  },
+  {
+    valor: 400,
+    prefixo: '',
+    sufixo: '+',
+    rotulo: 'holerites processados e enviados por mês',
+    fonte: `Experiência · ${empresa}`,
+    nota: frase(theLed.itens, '400 holerites', empresa),
+  },
+  {
+    valor: 75,
+    prefixo: 'até ',
+    sufixo: '%',
+    rotulo: 'dos casos com reconhecimento de sinais mais preciso',
+    fonte: `Projeto · ${libralizei.nome}`,
+    nota: frase(libralizei.itens, '75%', libralizei.nome),
+  },
+  {
+    valor: 1000,
+    prefixo: '',
+    sufixo: '+',
+    rotulo: 'dados reais em dashboards interativos',
+    fonte: `Projeto · ${oracle.nome}`,
+    nota: frase(oracle.itens, '1.000 dados', oracle.nome),
+  },
+];
+
+const capitulos = [
+  { id: 'perfil', num: '01', titulo: 'Perfil' },
+  { id: 'experiencia', num: '02', titulo: 'Experiência' },
+  { id: 'projetos', num: '03', titulo: 'Projetos' },
+  { id: 'competencias', num: '04', titulo: 'Competências' },
+  { id: 'contato', num: '05', titulo: 'Contato' },
+];
+const cap = Object.fromEntries(capitulos.map((c) => [c.id, c]));
+
+const nav = [
+  { href: '#destaques', rotulo: 'Destaques' },
+  ...capitulos.map((c) => ({ href: `#${c.id}`, rotulo: c.titulo })),
+];
+
+const declaracao = construo.slice(0, 3);
+const totalCompetencias = stack.reduce((s, g) => s + g.itens.length, 0);
+const caminhos = guilhoche();
+---
+
+<a class="ex-pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="ex-topo">
+  <div class="ex-topo__in">
+    <a class="ex-marca" href="#capa">
+      <span class="ex-monograma" aria-hidden="true"><span>C</span><span>F</span></span>
+      <span class="ex-marca__txt">
+        <span class="ex-marca__nome">{pessoa.nomeCurto}</span>
+        <span class="ex-marca__sub">Relatório de perfil · {ano}</span>
+      </span>
+    </a>
+    <nav class="ex-nav" aria-label="Seções">
+      <ul>
+        {
+          nav.map((n) => (
+            <li>
+              <a href={n.href} data-nav={n.href.slice(1)}>
+                {n.rotulo}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <button type="button" class="ex-imprimir js-imprimir" hidden>
+      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"
+        ><path d="M5 8V2.5h10V8M5 14.5H3V8h14v6.5h-2M5.5 11.5h9v6h-9z" fill="none" stroke="currentColor" stroke-width="1.3"
+        ></path></svg
+      >
+      Imprimir CV
+    </button>
+  </div>
+  <div class="ex-topo__progresso" aria-hidden="true"><span class="js-progresso"></span></div>
+</header>
+
+<main id="conteudo" tabindex="-1">
+  <!-- ============ CAPA ============ -->
+  <section class="ex-capa" id="capa" aria-labelledby="ex-nome">
+    <div class="ex-capa__guilhoche" aria-hidden="true">
+      <svg viewBox={`0 0 ${GUILHOCHE_TAMANHO} ${GUILHOCHE_TAMANHO}`} class="js-guilhoche">
+        <circle cx="300" cy="300" r="292" class="ex-g-aro"></circle>
+        <circle cx="300" cy="300" r="62" class="ex-g-aro"></circle>
+        {caminhos.map((d) => <path d={d} />)}
+      </svg>
+    </div>
+
+    <div class="ex-capa__in">
+      <div class="ex-capa__faixa">
+        <p class="ex-sc">Relatório de perfil profissional</p>
+        <p class="ex-sc ex-capa__edicao">Edição {ano} · Nº 01</p>
+      </div>
+      <span class="ex-regua js-regua" aria-hidden="true"></span>
+
+      <div class="ex-capa__corpo">
+        <p class="ex-capa__cargo ex-sc js-capa-item">{pessoa.cargo}</p>
+        <h1 class="ex-nome js-nome" id="ex-nome">
+          {pessoa.nomeCurto.split(' ')[0]} <em>{pessoa.nomeCurto.split(' ').slice(1).join(' ')}</em>
+        </h1>
+        <p class="ex-capa__nome-completo js-capa-item">{pessoa.nomeCompleto}</p>
+        <p class="ex-declaracao js-capa-item">
+          Eu construo{' '}
+          {
+            declaracao.map(([a, b], i) => (
+              <>
+                <em>{a}</em> para {b}
+                {i < declaracao.length - 2 ? ', ' : i === declaracao.length - 2 ? ' e ' : '.'}
+              </>
+            ))
+          }
+        </p>
+      </div>
+
+      <span class="ex-regua js-regua" aria-hidden="true"></span>
+      <dl class="ex-capa__meta">
+        <div class="js-capa-item">
+          <dt class="ex-sc">Local</dt>
+          <dd>{pessoa.local}</dd>
+        </div>
+        <div class="js-capa-item">
+          <dt class="ex-sc">Situação</dt>
+          <dd><span class="ex-ponto" aria-hidden="true"></span>{pessoa.status}</dd>
+        </div>
+        <div class="js-capa-item">
+          <dt class="ex-sc">Edição</dt>
+          <dd>{dataEdicao}</dd>
+        </div>
+        <div class="js-capa-item">
+          <dt class="ex-sc">Contato</dt>
+          <dd><a href={`mailto:${contato.email}`}>{contato.email}</a></dd>
+        </div>
+      </dl>
+      <p class="ex-so-impressao ex-capa__impresso">
+        {contato.email} · {contato.linkedin.rotulo} · {contato.github.rotulo}
+      </p>
+
+      <nav class="ex-sumario" aria-label="Sumário">
+        <p class="ex-sc ex-sumario__tit">Neste relatório</p>
+        <ol>
+          {
+            capitulos.map((c) => (
+              <li>
+                <a href={`#${c.id}`}>
+                  <span class="ex-sumario__n">{c.num}</span>
+                  <span class="ex-sumario__t">{c.titulo}</span>
+                  <span class="ex-sumario__pontos" aria-hidden="true" />
+                  <span class="ex-sumario__seta" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ============ DESTAQUES ============ -->
+  <section class="ex-destaques" id="destaques" aria-labelledby="t-destaques">
+    <div class="ex-largura">
+      <div class="ex-destaques__cab">
+        <p class="ex-sc ex-ouro">Em números</p>
+        <h2 id="t-destaques" class="ex-h2 js-sobe">Destaques</h2>
+        <p class="ex-destaques__intro js-sobe">
+          Resultados citados no currículo, com a fonte de cada número.
+        </p>
+      </div>
+      <ul class="ex-numeros">
+        {
+          destaques.map((d, i) => (
+            <li class="ex-numero js-numero">
+              <span class="ex-numero__regua js-regua" aria-hidden="true" />
+              <p class="ex-numero__valor">
+                {d.prefixo && <span class="ex-numero__pre">{d.prefixo}</span>}
+                <span class="js-conta" data-valor={d.valor}>
+                  {nf.format(d.valor)}
+                </span>
+                <span class="ex-numero__suf">{d.sufixo}</span>
+              </p>
+              <p class="ex-numero__rot">{d.rotulo}</p>
+              <p class="ex-numero__fonte">
+                <span class="ex-sc">Fonte</span> {d.fonte}<sup>
+                  <a href={`#nota-${i + 1}`} id={`ref-${i + 1}`} aria-label={`Nota ${i + 1}`}>
+                    {i + 1}
+                  </a>
+                </sup>
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+      <ol class="ex-notas" aria-label="Notas">
+        {
+          destaques.map((d, i) => (
+            <li id={`nota-${i + 1}`}>
+              <span class="ex-notas__n">{i + 1}</span>
+              <span>
+                “{d.nota}” <span class="ex-notas__orig">— {d.fonte}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ 01 PERFIL ============ -->
+  <section class="ex-capitulo" id="perfil" aria-labelledby="t-perfil">
+    <div class="ex-largura">
+      <div class="ex-cabecalho" aria-hidden="true">
+        <span class="ex-sc">Capítulo {cap.perfil.num}</span>
+        <span class="ex-sc">{pessoa.nomeCurto} · Relatório de perfil</span>
+      </div>
+      <span class="ex-regua ex-regua--forte js-regua" aria-hidden="true"></span>
+      <div class="ex-grade">
+        <div class="ex-grade__lado">
+          <p class="ex-cap__num" aria-hidden="true">{cap.perfil.num} —</p>
+          <h2 class="ex-h2 js-sobe" id="t-perfil">{cap.perfil.titulo}</h2>
+        </div>
+        <div class="ex-grade__corpo">
+          <p class="ex-lead js-sobe">{sobre.paragrafo}</p>
+          <dl class="ex-resumo">
+            {
+              sobre.resumo.map((r) => (
+                <div class="js-sobe">
+                  <span class="ex-regua js-regua" aria-hidden="true" />
+                  <dt class="ex-sc">{r.rotulo}</dt>
+                  {r.linhas.map((l, j) => (
+                    <dd class={j === 0 ? 'ex-resumo__l1' : 'ex-resumo__l2'}>{l}</dd>
+                  ))}
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 EXPERIÊNCIA ============ -->
+  <section class="ex-capitulo" id="experiencia" aria-labelledby="t-experiencia">
+    <div class="ex-largura">
+      <div class="ex-cabecalho" aria-hidden="true">
+        <span class="ex-sc">Capítulo {cap.experiencia.num}</span>
+        <span class="ex-sc">Trajetória</span>
+      </div>
+      <span class="ex-regua ex-regua--forte js-regua" aria-hidden="true"></span>
+      <div class="ex-grade">
+        <div class="ex-grade__lado">
+          <p class="ex-cap__num" aria-hidden="true">{cap.experiencia.num} —</p>
+          <h2 class="ex-h2 js-sobe" id="t-experiencia">{cap.experiencia.titulo}</h2>
+        </div>
+        <ol class="ex-grade__corpo ex-trajetoria">
+          {
+            trajetoria.map((t) => (
+              <li class="ex-etapa js-sobe">
+                <span class="ex-regua js-regua" aria-hidden="true" />
+                <p class="ex-etapa__periodo ex-sc">{t.periodo}</p>
+                <div class="ex-etapa__quem">
+                  <h3 class="ex-h3">{t.cargo}</h3>
+                  <p class="ex-etapa__lugar">{t.lugar}</p>
+                </div>
+                {t.itens.length > 0 ? (
+                  <ul class="ex-etapa__itens">
+                    {t.itens.map((it) => (
+                      <li>{it}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p class="ex-etapa__vazio" aria-hidden="true">
+                    —
+                  </p>
+                )}
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 PROJETOS ============ -->
+  <section class="ex-capitulo" id="projetos" aria-labelledby="t-projetos">
+    <div class="ex-largura">
+      <div class="ex-cabecalho" aria-hidden="true">
+        <span class="ex-sc">Capítulo {cap.projetos.num}</span>
+        <span class="ex-sc">Estudos de caso</span>
+      </div>
+      <span class="ex-regua ex-regua--forte js-regua" aria-hidden="true"></span>
+      <div class="ex-grade">
+        <div class="ex-grade__lado">
+          <p class="ex-cap__num" aria-hidden="true">{cap.projetos.num} —</p>
+          <h2 class="ex-h2 js-sobe" id="t-projetos">{cap.projetos.titulo}</h2>
+        </div>
+        <div class="ex-grade__corpo ex-casos">
+          {
+            projetos.map((p, i) => (
+              <article class="ex-caso" aria-labelledby={`caso-${p.id}`}>
+                <div class="ex-caso__cab js-sobe">
+                  <p class="ex-sc ex-ouro-escuro">
+                    Estudo de caso {pad(i + 1)} · {p.codigo}
+                  </p>
+                  <h3 class="ex-caso__nome" id={`caso-${p.id}`}>
+                    {p.nome}
+                  </h3>
+                  <p class="ex-caso__meta ex-sc">{p.meta.join(' · ')}</p>
+                </div>
+                <div class="ex-caso__colunas">
+                  <div class="js-sobe">
+                    <span class="ex-regua js-regua" aria-hidden="true" />
+                    <h4 class="ex-h4">Contexto</h4>
+                    <p>{p.itens[0]}</p>
+                  </div>
+                  <div class="js-sobe">
+                    <span class="ex-regua js-regua" aria-hidden="true" />
+                    <h4 class="ex-h4">Entregas</h4>
+                    <ul class="ex-lista">
+                      {p.itens.slice(1).map((it) => (
+                        <li>{it}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div class="js-sobe">
+                    <span class="ex-regua js-regua" aria-hidden="true" />
+                    <h4 class="ex-h4">Tecnologias</h4>
+                    <ul class="ex-tecnologias">
+                      {p.tags.map((t) => (
+                        <li>{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                {p.links.length > 0 && (
+                  <ul class="ex-caso__links">
+                    {p.links.map((l) => (
+                      <li>
+                        <a href={l.url} rel="noopener">
+                          {l.rotulo}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 COMPETÊNCIAS ============ -->
+  <section class="ex-capitulo" id="competencias" aria-labelledby="t-competencias">
+    <div class="ex-largura">
+      <div class="ex-cabecalho" aria-hidden="true">
+        <span class="ex-sc">Capítulo {cap.competencias.num}</span>
+        <span class="ex-sc">Stack</span>
+      </div>
+      <span class="ex-regua ex-regua--forte js-regua" aria-hidden="true"></span>
+      <div class="ex-grade">
+        <div class="ex-grade__lado">
+          <p class="ex-cap__num" aria-hidden="true">{cap.competencias.num} —</p>
+          <h2 class="ex-h2 js-sobe" id="t-competencias">{cap.competencias.titulo}</h2>
+        </div>
+        <div class="ex-grade__corpo">
+          <table class="ex-matriz">
+            <caption class="ex-sr">Competências por área</caption>
+            <thead>
+              <tr>
+                <th scope="col" class="ex-sc">Área</th>
+                <th scope="col" class="ex-sc">Competências</th>
+                <th scope="col" class="ex-sc ex-num">Itens</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                stack.map((g) => (
+                  <tr class="js-linha">
+                    <th scope="row">{g.grupo}</th>
+                    <td>
+                      <ul class="ex-matriz__itens">
+                        {g.itens.map((it) => (
+                          <li>{it}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td class="ex-num">{pad(g.itens.length)}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row">Total</th>
+                <td><span class="ex-matriz__nota">{stack.length} áreas</span></td>
+                <td class="ex-num">{totalCompetencias}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 CONTATO ============ -->
+  <section class="ex-encerramento" id="contato" aria-labelledby="t-contato">
+    <div class="ex-largura">
+      <div class="ex-cabecalho ex-cabecalho--claro" aria-hidden="true">
+        <span class="ex-sc">Capítulo {cap.contato.num}</span>
+        <span class="ex-sc">Encerramento</span>
+      </div>
+      <span class="ex-regua ex-regua--ouro js-regua" aria-hidden="true"></span>
+      <div class="ex-encerramento__grade">
+        <div>
+          <p class="ex-cap__num ex-cap__num--claro" aria-hidden="true">{cap.contato.num} — Contato</p>
+          <h2 class="ex-encerramento__tit js-sobe" id="t-contato">Vamos <em>conversar</em>.</h2>
+          <p class="ex-encerramento__txt js-sobe">
+            Para propostas, projetos ou uma conversa sobre oportunidades, os canais abaixo estão abertos.
+          </p>
+          <div class="ex-acoes js-sobe">
+            <a class="ex-botao ex-botao--cheio" href={`mailto:${contato.email}`}>Escrever e-mail</a>
+            <a class="ex-botao" href={contato.linkedin.url} rel="noopener">LinkedIn</a>
+            <a class="ex-botao" href={contato.github.url} rel="noopener">GitHub</a>
+          </div>
+          <p class="ex-encerramento__chat js-sobe">
+            Prefere perguntar algo antes? <a href="/conversa">Converse com o assistente do site</a>.
+          </p>
+        </div>
+        <div class="ex-encerramento__lado">
+          <dl class="ex-canais js-sobe">
+            <div>
+              <dt class="ex-sc">E-mail</dt>
+              <dd><a href={`mailto:${contato.email}`}>{contato.email}</a></dd>
+            </div>
+            <div>
+              <dt class="ex-sc">LinkedIn</dt>
+              <dd><a href={contato.linkedin.url} rel="noopener">{contato.linkedin.rotulo}</a></dd>
+            </div>
+            <div>
+              <dt class="ex-sc">GitHub</dt>
+              <dd><a href={contato.github.url} rel="noopener">{contato.github.rotulo}</a></dd>
+            </div>
+            <div>
+              <dt class="ex-sc">Base</dt>
+              <dd>{pessoa.local}</dd>
+            </div>
+          </dl>
+          <div class="ex-assinatura js-sobe">
+            <p class="ex-assinatura__saud">Atenciosamente,</p>
+            <p class="ex-assinatura__nome">{pessoa.nomeCompleto}</p>
+            <p class="ex-sc">{pessoa.cargo} · {pessoa.local}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="ex-rodape">
+  <div class="ex-largura ex-rodape__in">
+    <p>© {ano} {pessoa.nomeCurto} · Relatório de perfil profissional</p>
+    <a href="#capa">Voltar ao início ↑</a>
+  </div>
+</footer>
+
+<script>
+  import { iniciar } from './main';
+  iniciar();
+</script>

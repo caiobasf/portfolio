@@ -1,0 +1,300 @@
+---
+/**
+ * Estilo "suico": cartaz do Estilo Tipográfico Internacional.
+ * Grade estrita de 12 colunas (6 no celular), Inter Tight em contraste extremo
+ * de peso e corpo, alinhamento à esquerda, vermelho de sinalização só em formas
+ * geométricas e tipo grande. A grade aparece com o botão "Grade" ou a tecla G
+ * (o botão é um checkbox: funciona sem JS).
+ */
+import { pessoa, contato, sobre, construo, projetos, stack, trajetoria } from '../../content/perfil';
+import './suico.css';
+
+const ano = new Date().getFullYear();
+const dois = (n: number) => String(n).padStart(2, '0');
+const totalItens = stack.reduce((s, g) => s + g.itens.length, 0);
+
+const indice = [
+  { href: '#sobre', n: '01', rotulo: 'Sobre' },
+  { href: '#construo', n: '02', rotulo: 'Construo' },
+  { href: '#projetos', n: '03', rotulo: 'Projetos' },
+  { href: '#stack', n: '04', rotulo: 'Stack' },
+  { href: '#trajetoria', n: '05', rotulo: 'Trajetória' },
+  { href: '#contato', n: '06', rotulo: 'Contato' },
+];
+---
+
+<a class="s-pular" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="s-sobreposta" aria-hidden="true">
+  {Array.from({ length: 12 }, (_, i) => <span><i>{i + 1}</i></span>)}
+</div>
+
+<label class="s-grade-botao">
+  <input type="checkbox" id="s-grade" role="switch" aria-keyshortcuts="G" />
+  <span class="s-grade-quadro" aria-hidden="true"></span>
+  <span>Grade</span>
+  <kbd aria-hidden="true">G</kbd>
+</label>
+
+<header class="s-topo s-grade">
+  <p class="s-marca">
+    <strong>{pessoa.nomeCurto}</strong>
+    <span>Portfólio {ano}</span>
+  </p>
+  <nav class="s-indice" aria-label="Índice">
+    <ol>
+      {
+        indice.map((x) => (
+          <li>
+            <a href={x.href}>
+              <span class="s-n">{x.n}</span>
+              {x.rotulo}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </nav>
+</header>
+
+<main id="conteudo" tabindex="-1">
+  <section class="s-cartaz s-grade" aria-labelledby="s-nome">
+    <div class="s-linhas" aria-hidden="true">
+      {Array.from({ length: 12 }, () => <span></span>)}
+    </div>
+
+    <svg class="s-forma" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <g class="s-forma-giro">
+        <circle cx="100" cy="100" r="100" fill="#e30613"></circle>
+        <rect x="-14" y="96" width="228" height="8" fill="#111"></rect>
+      </g>
+    </svg>
+
+    <dl class="s-meta">
+      <div><dt>Cargo</dt><dd>{pessoa.cargo}</dd></div>
+      <div><dt>Local</dt><dd>{pessoa.local}</dd></div>
+      <div><dt>Status</dt><dd><span class="s-ponto" aria-hidden="true"></span>{pessoa.status}</dd></div>
+      <div><dt>Ano</dt><dd>{ano}</dd></div>
+    </dl>
+
+    <p class="s-vertical" aria-hidden="true">Portfólio — {pessoa.apelido} — {ano}</p>
+
+    <h1 class="s-nome" id="s-nome">
+      <span class="s-linha s-l1"><span class="s-tinta">Caio</span></span>{' '}
+      <span class="s-linha s-l2"><span class="s-tinta">Ferreira</span></span>
+    </h1>
+
+    <p class="s-lide">
+      <span class="s-lide-n" aria-hidden="true">↘</span>
+      <span class="s-lide-t">
+        Eu construo <b>{construo[0][0]}</b> para {construo[0][1]}. {pessoa.cargo} em {pessoa.local}.
+      </span>
+    </p>
+  </section>
+
+  <section class="s-secao s-grade" id="sobre" aria-labelledby="s-t-sobre">
+    <div class="s-regua" aria-hidden="true"></div>
+    <span class="s-numeral" aria-hidden="true"><span>01</span></span>
+    <h2 class="s-titulo" id="s-t-sobre">Sobre</h2>
+    <p class="s-sub">Perfil, formação e idiomas</p>
+
+    <p class="s-paragrafo s-revela">{sobre.paragrafo}</p>
+
+    <dl class="s-resumo">
+      {
+        sobre.resumo.map((r, i) => (
+          <div>
+            <dt>
+              <span class="s-n">{`1.${i + 1}`}</span>
+              {r.rotulo}
+            </dt>
+            {r.linhas.map((l) => (
+              <dd>{l}</dd>
+            ))}
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="s-secao s-grade" id="construo" aria-labelledby="s-t-construo">
+    <div class="s-regua" aria-hidden="true"></div>
+    <span class="s-numeral" aria-hidden="true"><span>02</span></span>
+    <h2 class="s-titulo" id="s-t-construo">Construo</h2>
+    <p class="s-sub">O que faço, e para quem</p>
+
+    <p class="s-construo-lide">Eu construo</p>
+    <ul class="s-construo">
+      {
+        construo.map(([a, b], i) => (
+          <li>
+            <span class="s-n">{`2.${i + 1}`}</span>
+            <span class="s-construo-t">
+              <b>{a}</b> para {b}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="s-secao s-grade" id="projetos" aria-labelledby="s-t-projetos">
+    <div class="s-regua" aria-hidden="true"></div>
+    <span class="s-numeral" aria-hidden="true"><span>03</span></span>
+    <h2 class="s-titulo" id="s-t-projetos">Projetos</h2>
+    <p class="s-sub">{dois(projetos.length)} trabalhos selecionados</p>
+
+    {
+      projetos.map((p, i) => (
+        <article class:list={['s-proj', i % 2 ? 's-proj-b' : 's-proj-a']} aria-labelledby={`s-p-${p.id}`}>
+          <div class="s-proj-bloco" aria-hidden="true">
+            <span class="s-proj-cod">{p.codigo}</span>
+            <span class="s-proj-num">{dois(i + 1)}</span>
+          </div>
+          <h3 class="s-proj-nome" id={`s-p-${p.id}`}>
+            <span class="s-linha">
+              <span class="s-tinta">{p.nome}</span>
+            </span>
+          </h3>
+          <p class="s-proj-meta">
+            <span class="s-visual">{p.codigo} · </span>
+            {p.meta.join(' · ')}
+          </p>
+          <ol class="s-proj-itens">
+            {p.itens.map((t, j) => (
+              <li>
+                <span class="s-n" aria-hidden="true">
+                  {`${i + 1}.${j + 1}`}
+                </span>
+                <span>{t}</span>
+              </li>
+            ))}
+          </ol>
+          <div class="s-proj-tags">
+            <p class="s-rot">Tecnologias</p>
+            <ul>
+              {p.tags.map((t) => (
+                <li>{t}</li>
+              ))}
+            </ul>
+          </div>
+          {p.links.length > 0 && (
+            <ul class="s-proj-links">
+              {p.links.map((l) => (
+                <li>
+                  <a href={l.url} rel="noopener">
+                    {l.rotulo} →
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
+      ))
+    }
+  </section>
+
+  <section class="s-secao s-grade" id="stack" aria-labelledby="s-t-stack">
+    <div class="s-regua" aria-hidden="true"></div>
+    <span class="s-numeral" aria-hidden="true"><span>04</span></span>
+    <h2 class="s-titulo" id="s-t-stack">Stack</h2>
+    <p class="s-sub">{dois(stack.length)} grupos, {totalItens} itens</p>
+
+    <div class="s-tabela">
+      <div class="s-tabela-cab" aria-hidden="true">
+        <span>Grupo</span><span>Itens</span><span>Qtd.</span>
+      </div>
+      <dl>
+        {
+          stack.map((g) => (
+            <div class="s-tabela-linha">
+              <dt>{g.grupo}</dt>
+              <dd class="s-tabela-itens">
+                <ul>
+                  {g.itens.map((t) => (
+                    <li>{t}</li>
+                  ))}
+                </ul>
+              </dd>
+              <dd class="s-tabela-qtd">
+                <span class="s-visual">Quantidade: </span>
+                {dois(g.itens.length)}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section class="s-secao s-grade" id="trajetoria" aria-labelledby="s-t-trajetoria">
+    <div class="s-regua" aria-hidden="true"></div>
+    <span class="s-numeral" aria-hidden="true"><span>05</span></span>
+    <h2 class="s-titulo" id="s-t-trajetoria">Trajetória</h2>
+    <p class="s-sub">Experiência e formação</p>
+
+    <div class="s-traj">
+      <div class="s-traj-cab" aria-hidden="true">
+        <span>Período</span><span>Cargo</span><span>Lugar</span><span>Itens</span>
+      </div>
+      <ol>
+        {
+          trajetoria.map((t) => (
+            <li class="s-traj-linha">
+              <p class="s-traj-periodo">{t.periodo}</p>
+              <h3 class="s-traj-cargo">{t.cargo}</h3>
+              <p class="s-traj-lugar">{t.lugar}</p>
+              {t.itens.length > 0 ? (
+                <ul class="s-traj-itens">
+                  {t.itens.map((x) => (
+                    <li>{x}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="s-traj-itens s-traj-vazio">Formação técnica concluída.</p>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="s-secao s-grade s-contato" id="contato" aria-labelledby="s-t-contato">
+    <div class="s-regua" aria-hidden="true"></div>
+    <span class="s-numeral" aria-hidden="true"><span>06</span></span>
+    <h2 class="s-titulo" id="s-t-contato">Contato</h2>
+    <p class="s-sub"><span class="s-ponto" aria-hidden="true"></span>{pessoa.status}</p>
+
+    <p class="s-rot s-contato-rot">Escreva para</p>
+    <a class="s-email" href={`mailto:${contato.email}`}>
+      <span class="s-email-t">{contato.email}</span>
+    </a>
+
+    <ul class="s-redes">
+      <li>
+        <span class="s-rot">LinkedIn</span>
+        <a href={contato.linkedin.url} rel="me noopener">{contato.linkedin.rotulo}<span aria-hidden="true"> →</span></a>
+      </li>
+      <li>
+        <span class="s-rot">GitHub</span>
+        <a href={contato.github.url} rel="me noopener">{contato.github.rotulo}<span aria-hidden="true"> →</span></a>
+      </li>
+      <li>
+        <span class="s-rot">Conversa</span>
+        <a href="/conversa">Perguntar ao chat<span aria-hidden="true"> →</span></a>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<footer class="s-rodape s-grade">
+  <p>© {ano} {pessoa.nomeCurto}</p>
+  <p>{pessoa.local}</p>
+  <p>Composto em Inter Tight sobre uma grade de 12 colunas.</p>
+  <p><a href="#conteudo">Voltar ao topo ↑</a></p>
+</footer>
+
+<script>
+  import './main';
+</script>

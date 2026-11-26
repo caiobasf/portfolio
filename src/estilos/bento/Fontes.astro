@@ -1,0 +1,11 @@
+---
+/** Fontes do estilo Bento: Geist (interface e display) e Geist Mono (rótulos). */
+import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
+import { fontFace } from '../fontes';
+
+const css = [fontFace('Geist Variable', '100 900', geist, true), fontFace('Geist Mono Variable', '100 900', geistMono, true)].join('');
+---
+
+<link rel="preload" href={geist} as="font" type="font/woff2" crossorigin />
+<style is:inline set:html={css}></style>

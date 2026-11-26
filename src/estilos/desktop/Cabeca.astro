@@ -1,0 +1,26 @@
+---
+/**
+ * <head> do CaioOS: fontes auto-hospedadas e o script que liga o modo
+ * "sistema operacional" antes da primeira pintura (sem JS, nada disso roda e
+ * a página fica com todas as janelas visíveis no fluxo).
+ */
+import pixelify from '@fontsource-variable/pixelify-sans/files/pixelify-sans-latin-wght-normal.woff2?url';
+import plex400 from '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2?url';
+import plex600 from '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-600-normal.woff2?url';
+import { fontFace } from '../fontes';
+
+const css = [
+  fontFace('Pixelify Sans Variable', '400 700', pixelify, true),
+  fontFace('IBM Plex Mono', '400', plex400),
+  fontFace('IBM Plex Mono', '600', plex600),
+].join('');
+
+const liga = `(function(){var h=document.documentElement;h.classList.add('os');
+try{var r=matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!r&&!sessionStorage.getItem('cf-os-boot')){h.classList.add('inicializando');
+setTimeout(function(){h.classList.remove('inicializando')},6000);}}catch(e){}})();`;
+---
+
+<link rel="preload" href={pixelify} as="font" type="font/woff2" crossorigin />
+<style is:inline set:html={css}></style>
+<script is:inline set:html={liga}></script>

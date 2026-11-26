@@ -1,0 +1,445 @@
+---
+/**
+ * Estilo "pixel": RPG original de 8/16 bits.
+ * Tela de título com paisagem em canvas e herói desenhado em código, diálogo
+ * com máquina de escrever, ficha do personagem, missões, inventário, mapa da
+ * jornada e menu de contato com cursor. Todo o texto está no HTML (sem JS a
+ * página é legível); o JS só acrescenta movimento, som e as interações.
+ */
+import { pessoa, contato, sobre, projetos, stack, trajetoria } from '../../content/perfil';
+import Sprite from './Sprite.astro';
+import { HEROI, RETRATO, ICONES, MARCADO, GEMA, CURSOR, ITEM_GRUPO } from './sprites';
+import './pixel.css';
+
+const ano = new Date().getFullYear();
+const dois = (n: number) => String(n).padStart(2, '0');
+
+/** Falas do diálogo: frases do parágrafo; as longas quebram no " e " mais central. */
+function falas(texto: string): string[] {
+  const frases = texto.split(/(?<=\.)\s+/);
+  const out: string[] = [];
+  for (const f of frases) {
+    if (f.length <= 110) {
+      out.push(f);
+      continue;
+    }
+    const meio = f.length / 2;
+    let melhor = -1;
+    for (let i = f.indexOf(' e '); i !== -1; i = f.indexOf(' e ', i + 1)) {
+      if (melhor === -1 || Math.abs(i - meio) < Math.abs(melhor - meio)) melhor = i;
+    }
+    if (melhor === -1) out.push(f);
+    else out.push(f.slice(0, melhor), f.slice(melhor + 1));
+  }
+  return out;
+}
+const paginas = falas(sobre.paragrafo);
+
+const resumo = Object.fromEntries(sobre.resumo.map((r) => [r.rotulo, r.linhas]));
+const ficha: { rotulo: string; valor: string[] }[] = [
+  { rotulo: 'Classe', valor: [pessoa.cargo] },
+  { rotulo: 'Local', valor: [pessoa.local] },
+  { rotulo: 'Status', valor: [pessoa.status] },
+  { rotulo: 'Missão atual', valor: [...(resumo['Agora'] ?? [])] },
+  { rotulo: 'Formação', valor: [...(resumo['Formação'] ?? [])] },
+  { rotulo: 'Idiomas', valor: [...(resumo['Idiomas'] ?? [])] },
+];
+
+const jornada = [...trajetoria].reverse();
+const nav = [
+  { href: '#sobre', rotulo: 'Sobre' },
+  { href: '#missoes', rotulo: 'Missões' },
+  { href: '#inventario', rotulo: 'Inventário' },
+  { href: '#mapa', rotulo: 'Mapa' },
+  { href: '#contato', rotulo: 'Contato' },
+];
+const slug = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-');
+
+const menu = [
+  {
+    href: `mailto:${contato.email}`,
+    titulo: 'Enviar carta',
+    tipo: 'e-mail',
+    detalhe: contato.email,
+    icone: 'carta',
+    texto: 'Uma carta chega direto na caixa do Caio. Resposta garantida.',
+    externo: false,
+  },
+  {
+    href: contato.linkedin.url,
+    titulo: 'Guilda',
+    tipo: 'LinkedIn',
+    detalhe: contato.linkedin.rotulo,
+    icone: 'bandeira',
+    texto: 'O salão da guilda: experiência, conexões e recomendações.',
+    externo: true,
+  },
+  {
+    href: contato.github.url,
+    titulo: 'Baú de código',
+    tipo: 'GitHub',
+    detalhe: contato.github.rotulo,
+    icone: 'bau',
+    texto: 'Abra o baú e veja o código de cada aventura.',
+    externo: true,
+  },
+  {
+    href: '/conversa',
+    titulo: 'Conversar',
+    tipo: 'chat',
+    detalhe: 'Pergunte qualquer coisa',
+    icone: 'balao',
+    texto: 'Um chat que responde sobre a trajetória do Caio.',
+    externo: false,
+  },
+];
+---
+
+<a class="p-pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="p-hud">
+  <div class="p-hud-eu">
+    <span class="p-hud-retrato"><Sprite sprite={RETRATO} escala={2} /></span>
+    <span class="p-hud-nome">{pessoa.nome}</span>
+    <span class="p-hud-xp" aria-hidden="true">
+      <span class="p-hud-xp-rot">XP</span>
+      <span class="p-barra"><span class="p-barra-xp"></span></span>
+    </span>
+  </div>
+  <nav class="p-nav" aria-label="Seções">
+    <ul>
+      {
+        nav.map((n) => (
+          <li>
+            <a href={n.href}>{n.rotulo}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+  <button class="p-som" type="button" aria-pressed="false" hidden>
+    <span class="p-led" aria-hidden="true"></span>
+    <span>Som</span>
+    <span class="p-som-estado" aria-hidden="true"></span>
+  </button>
+</header>
+
+<main id="conteudo" tabindex="-1">
+  <!-- ═════════ TELA DE TÍTULO ═════════ -->
+  <section class="p-titulo" aria-labelledby="p-nome">
+    <canvas class="p-ceu" aria-hidden="true"></canvas>
+    <div class="p-titulo-conteudo">
+      <p class="p-pre">Uma aventura full stack</p>
+      <h1 class="p-logo" id="p-nome">
+        <span class="p-logo-l">Caio</span>{' '}
+        <span class="p-logo-l">Ferreira</span>
+      </h1>
+      <p class="p-faixa"><span>{pessoa.cargo}</span></p>
+      <p class="p-local">
+        {pessoa.local} <span aria-hidden="true">·</span>
+        <span class="p-online"><span class="p-led" aria-hidden="true"></span>{pessoa.status}</span>
+      </p>
+      <a class="p-start" href="#sobre">
+        <Sprite sprite={CURSOR} escala={3} class="p-start-cursor" />
+        <span>Pressione start</span>
+      </a>
+    </div>
+    <div class="p-heroi" aria-hidden="true">
+      <Sprite sprite={HEROI} escala={6} class="p-heroi-sprite" />
+      <span class="p-heroi-sombra"></span>
+    </div>
+    <p class="p-copy">© {ano} {pessoa.apelido} · arte e código originais</p>
+  </section>
+
+  <!-- ═════════ SOBRE: DIÁLOGO ═════════ -->
+  <section class="p-secao p-secao-sobre" id="sobre" aria-labelledby="p-t-sobre">
+    <div class="p-cab">
+      <p class="p-cap" aria-hidden="true">Cap. 1</p>
+      <h2 id="p-t-sobre">Sobre</h2>
+    </div>
+
+    <div class="p-dialogo p-caixa">
+      <div class="p-retrato p-caixa p-caixa-fina" aria-hidden="true">
+        <Sprite sprite={RETRATO} escala={6} />
+      </div>
+      <div class="p-dialogo-corpo">
+        <p class="p-falante" aria-hidden="true">{pessoa.nome}</p>
+        <p class="p-falas">
+          {
+            paginas.map((f, i) => (
+              <>
+                <span class="p-fala" data-i={i}>
+                  {f}
+                </span>{' '}
+              </>
+            ))
+          }
+        </p>
+        <div class="p-dialogo-pe">
+          <span class="p-pagina" aria-hidden="true"></span>
+          <button class="p-avancar" type="button" hidden>
+            <span class="p-avancar-t">Avançar</span>
+            <span class="p-seta" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ FICHA DO PERSONAGEM ═════════ -->
+  <section class="p-secao" id="ficha" aria-labelledby="p-t-ficha">
+    <div class="p-cab">
+      <p class="p-cap" aria-hidden="true">Cap. 2</p>
+      <h2 id="p-t-ficha">Ficha do personagem</h2>
+    </div>
+    <div class="p-ficha p-caixa">
+      <div class="p-ficha-retrato">
+        <div class="p-pedestal" aria-hidden="true">
+          <Sprite sprite={HEROI} escala={7} class="p-ficha-sprite" />
+        </div>
+        <p class="p-ficha-nome">{pessoa.nomeCurto}</p>
+        <p class="p-ficha-alcunha">alcunha: {pessoa.apelido}</p>
+        <div class="p-barras" aria-hidden="true">
+          <span class="p-barras-rot">HP</span><span class="p-barra p-barra-hp"><span></span></span>
+          <span class="p-barras-rot">MP</span><span class="p-barra p-barra-mp"><span></span></span>
+        </div>
+      </div>
+      <dl class="p-atributos">
+        {
+          ficha.map((a) => (
+            <div class="p-atributo">
+              <dt>{a.rotulo}</dt>
+              <dd>
+                {a.valor.map((v, i) => (
+                  <span class:list={['p-valor', i > 0 && 'p-valor-sub']}>{v}</span>
+                ))}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <!-- ═════════ MISSÕES (PROJETOS) ═════════ -->
+  <section class="p-secao p-secao-missoes" id="missoes" aria-labelledby="p-t-missoes">
+    <div class="p-cab">
+      <p class="p-cap" aria-hidden="true">Cap. 3</p>
+      <h2 id="p-t-missoes">Missões</h2>
+      <p class="p-cab-sub">Diário de missões · {dois(projetos.length)} concluídas</p>
+    </div>
+    <div class="p-missoes">
+      {
+        projetos.map((p, i) => (
+          <article class="p-missao p-caixa" aria-labelledby={`p-m-${p.id}`}>
+            <header class="p-missao-cab">
+              <p class="p-missao-cod">
+                Missão {dois(i + 1)} · {p.codigo}
+              </p>
+              <p class="p-selo">
+                <Sprite sprite={MARCADO} escala={2} />
+                Concluída
+              </p>
+              <h3 id={`p-m-${p.id}`}>{p.nome}</h3>
+              <p class="p-missao-meta">{p.meta.join(' · ')}</p>
+            </header>
+            <h4 class="p-rotulo">Objetivos</h4>
+            <ul class="p-objetivos">
+              {p.itens.map((t) => (
+                <li>
+                  <Sprite sprite={MARCADO} escala={2} class="p-check" />
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+            <h4 class="p-rotulo">Recompensas</h4>
+            <ul class="p-recompensas">
+              {p.tags.map((t) => (
+                <li>
+                  <Sprite sprite={GEMA} escala={2} />
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+            {p.links.length > 0 && (
+              <ul class="p-missao-links">
+                {p.links.map((l) => (
+                  <li>
+                    <a href={l.url} rel="noopener">
+                      {l.rotulo}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ═════════ INVENTÁRIO (STACK) ═════════ -->
+  <section class="p-secao" id="inventario" aria-labelledby="p-t-inventario">
+    <div class="p-cab">
+      <p class="p-cap" aria-hidden="true">Cap. 4</p>
+      <h2 id="p-t-inventario">Inventário</h2>
+      <p class="p-cab-sub">A stack, item por item. Passe o cursor ou foque para ler a descrição.</p>
+    </div>
+    <div class="p-inventario p-caixa">
+      <div class="p-abas" role="group" aria-label="Filtrar inventário" hidden>
+        <button type="button" class="p-aba" data-grupo="*" aria-pressed="true">Todos</button>
+        {
+          stack.map((g) => (
+            <button type="button" class="p-aba" data-grupo={slug(g.grupo)} aria-pressed="false">
+              {g.grupo}
+            </button>
+          ))
+        }
+      </div>
+      {
+        stack.map((g) => {
+          const info = ITEM_GRUPO[g.grupo] ?? { icone: 'bau', texto: 'Item da jornada.' };
+          return (
+            <section class="p-bolsa" data-grupo={slug(g.grupo)} aria-labelledby={`p-b-${slug(g.grupo)}`}>
+              <h3 class="p-bolsa-t" id={`p-b-${slug(g.grupo)}`}>
+                <Sprite sprite={ICONES[info.icone]} escala={2} />
+                {g.grupo} <span class="p-bolsa-n">×{g.itens.length}</span>
+              </h3>
+              <ul class="p-itens">
+                {g.itens.map((item, j) => {
+                  const id = `p-dica-${slug(g.grupo)}-${j}`;
+                  return (
+                    <li class="p-item" tabindex="0" aria-describedby={id}>
+                      <span class="p-item-icone">
+                        <Sprite sprite={ICONES[info.icone]} escala={4} />
+                      </span>
+                      <span class="p-item-nome">{item}</span>
+                      <span class="p-dica" role="tooltip" id={id}>
+                        <span class="p-dica-t">{item}</span>
+                        <span class="p-dica-g">{g.grupo}</span>
+                        <span class="p-dica-d">{info.texto}</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          );
+        })
+      }
+    </div>
+  </section>
+
+  <!-- ═════════ MAPA DA JORNADA (TRAJETÓRIA) ═════════ -->
+  <section class="p-secao p-secao-mapa" id="mapa" aria-labelledby="p-t-mapa">
+    <div class="p-cab">
+      <p class="p-cap" aria-hidden="true">Cap. 5</p>
+      <h2 id="p-t-mapa">Mapa da jornada</h2>
+      <p class="p-cab-sub">Trajetória, da primeira fase até a atual</p>
+    </div>
+    <ol class="p-mapa">
+      {
+        jornada.map((t, i) => {
+          const atual = /presente/i.test(t.periodo);
+          return (
+            <li class:list={['p-fase', atual && 'p-fase-atual', i % 2 ? 'p-fase-dir' : 'p-fase-esq']}>
+              <div class="p-no" aria-hidden="true">
+                <span class="p-no-n">{i + 1}</span>
+                {atual && (
+                  <span class="p-aqui">
+                    <Sprite sprite={HEROI} escala={2} class="p-aqui-sprite" />
+                  </span>
+                )}
+              </div>
+              <div class="p-fase-card p-caixa">
+                <p class="p-fase-n">
+                  Fase {i + 1}
+                  {atual && <span class="p-aqui-t">Você está aqui</span>}
+                </p>
+                <h3>{t.cargo}</h3>
+                <p class="p-fase-lugar">{t.lugar}</p>
+                <p class="p-fase-periodo">{t.periodo}</p>
+                {t.itens.length > 0 ? (
+                  <ul class="p-fase-itens">
+                    {t.itens.map((x) => (
+                      <li>{x}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p class="p-fase-vazio">Treinamento concluído. Classe desbloqueada: {pessoa.cargo}.</p>
+                )}
+              </div>
+            </li>
+          );
+        })
+      }
+      <li class="p-fase p-fase-proxima p-fase-esq">
+        <div class="p-no p-no-proximo" aria-hidden="true"><span class="p-no-n">?</span></div>
+        <div class="p-fase-card p-caixa">
+          <p class="p-fase-n">Fase {jornada.length + 1}</p>
+          <h3>Próxima missão</h3>
+          <p class="p-fase-lugar">{pessoa.status}.</p>
+          <a class="p-botao" href="#contato">Aceitar missão</a>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ═════════ CONTATO: MENU ═════════ -->
+  <section class="p-secao" id="contato" aria-labelledby="p-t-contato">
+    <div class="p-cab">
+      <p class="p-cap" aria-hidden="true">Cap. 6</p>
+      <h2 id="p-t-contato">Contato</h2>
+      <p class="p-cab-sub">Use as setas ↑ ↓ e Enter, ou clique.</p>
+    </div>
+    <div class="p-menu-area">
+      <nav class="p-menu-janela p-caixa" aria-label="Contato">
+        <p class="p-menu-titulo" aria-hidden="true">O que deseja fazer?</p>
+        <ul class="p-menu">
+          {
+            menu.map((m, i) => (
+              <li>
+                <a
+                  class:list={['p-opcao', i === 0 && 'ativa']}
+                  href={m.href}
+                  data-i={i}
+                  rel={m.externo ? 'me noopener' : undefined}
+                >
+                  <Sprite sprite={CURSOR} escala={3} class="p-cursor" />
+                  <span class="p-opcao-t">{m.titulo}</span>
+                  <span class="p-opcao-tipo">({m.tipo})</span>
+                  <span class="p-opcao-d">{m.detalhe}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <div class="p-menu-info p-caixa" aria-hidden="true">
+        {
+          menu.map((m, i) => (
+            <div class:list={['p-info', i === 0 && 'ativa']} data-i={i}>
+              <Sprite sprite={ICONES[m.icone]} escala={8} />
+              <p>{m.texto}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="p-rodape">
+  <p class="p-fim">Obrigado por jogar!</p>
+  <p><span class="p-mono">©</span> {ano} {pessoa.nomeCurto} · {pessoa.local} · sprites, paisagem e sons feitos em código</p>
+  <p><a href="#conteudo">Voltar à tela de título</a></p>
+</footer>
+
+<script>
+  import './main';
+</script>

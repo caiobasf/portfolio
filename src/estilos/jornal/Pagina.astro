@@ -1,0 +1,1505 @@
+---
+/**
+ * Estilo "jornal": primeira página de um jornal impresso (broadsheet).
+ *
+ * Cabeçalho gótico, linha de edição com a data do build, índice de seções,
+ * manchete montada com os dados do perfil, colunas justificadas com capitular,
+ * projetos como reportagens, carreira com datas, stack como classificados,
+ * previsão do tempo, cotações e expediente. Animação discreta no main.ts.
+ */
+import gotica from '@fontsource/unifrakturmaguntia/files/unifrakturmaguntia-latin-400-normal.woff2?url';
+import playfair from '@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2?url';
+import playfairI from '@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2?url';
+import serif from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2?url';
+import serifI from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-italic.woff2?url';
+import { fontFace } from '../fontes';
+import { pessoa, contato, sobre, construo, projetos, stack, trajetoria } from '../../content/perfil';
+import Ilustracao from './Ilustracao.astro';
+
+const fontes = [
+  fontFace('UnifrakturMaguntia', '400', gotica),
+  fontFace('Playfair Display Variable', '400 900', playfair, true),
+  fontFace('Playfair Display Variable', '400 900', playfairI, true, 'italic'),
+  fontFace('Source Serif 4 Variable', '200 900', serif, true),
+  fontFace('Source Serif 4 Variable', '200 900', serifI, true, 'italic'),
+].join('');
+
+/* ---------------------------------------------------- edição do dia (build) */
+const hoje = new Date();
+const tz = 'America/Sao_Paulo';
+const dataExtenso = new Intl.DateTimeFormat('pt-BR', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: tz,
+}).format(hoje);
+const dataCurta = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: tz }).format(hoje);
+const dataIso = hoje.toISOString().slice(0, 10);
+const romano = (n: number) => {
+  const t: [number, string][] = [
+    [10, 'X'],
+    [9, 'IX'],
+    [5, 'V'],
+    [4, 'IV'],
+    [1, 'I'],
+  ];
+  let s = '';
+  for (const [v, r] of t) while (n >= v) ((s += r), (n -= v));
+  return s;
+};
+const fundacao = Date.UTC(2023, 0, 1);
+const numero = (Math.floor((hoje.getTime() - fundacao) / 86400000) + 1).toLocaleString('pt-BR');
+const ano = romano(hoje.getUTCFullYear() - 2023 + 1);
+const cidade = pessoa.local.split(',')[0];
+
+/* ------------------------------------------------------------- manchete */
+const lista = (xs: readonly string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} e ${xs[xs.length - 1]}`);
+const manchete = `${pessoa.nomeCurto}, desenvolvedor de ${cidade}, constrói ${lista(construo.slice(0, 3).map((c) => c[0]))}`;
+const agora = sobre.resumo.find((r) => r.rotulo === 'Agora');
+const formacao = sobre.resumo.find((r) => r.rotulo === 'Formação');
+const idiomas = sobre.resumo.find((r) => r.rotulo === 'Idiomas');
+const totalStack = stack.reduce((n, g) => n + g.itens.length, 0);
+const linhaFina = `${pessoa.cargo}, hoje ${agora ? agora.linhas[0].replace(' · ', ' na ') : ''}, soma ${projetos.length} projetos em destaque e ${totalStack} ferramentas no repertório. Situação: ${pessoa.status.toLowerCase()}.`;
+const emSuasPalavras = lista(construo.map(([a, b]) => `${a} para ${b}`));
+const feito = trajetoria[0]?.itens[0];
+const anoInicio = Math.min(...trajetoria.map((t) => Number(t.periodo.match(/\d{4}/)?.[0] ?? 9999)));
+const numeros = [
+  { n: String(projetos.length), rotulo: 'projetos em destaque' },
+  { n: String(totalStack), rotulo: 'ferramentas na stack' },
+  { n: String(trajetoria.length), rotulo: 'etapas na carreira' },
+  { n: String(anoInicio), rotulo: 'ano em que tudo começou' },
+];
+const frase = construo[Math.floor(hoje.getTime() / 86400000) % construo.length];
+
+/* --------------------------------------------------------- cotações (stack) */
+function hash(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+const cotacoes = stack
+  .filter((g) => g.grupo !== 'Idiomas')
+  .flatMap((g) => g.itens)
+  .map((item) => {
+    const h = hash(item);
+    const valor = (100 + (h % 90000) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    const estavel = h % 7 === 0;
+    const variacao = ((h >>> 8) % 95) / 10 + 0.4;
+    return {
+      sigla: item.replace(/\s*\(.*\)/, '').toUpperCase(),
+      valor,
+      estavel,
+      variacao: variacao.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+    };
+  });
+
+/* ------------------------------------------------------------- projetos */
+const destaque = (itens: string[]) => itens.find((i) => /\d/.test(i)) ?? itens[itens.length - 1];
+
+const secoes = [
+  { href: '#manchete', rotulo: 'Primeira página' },
+  { href: '#projetos', rotulo: 'Tecnologia' },
+  { href: '#carreira', rotulo: 'Carreira' },
+  { href: '#classificados', rotulo: 'Classificados' },
+  { href: '#expediente', rotulo: 'Expediente' },
+  { href: '/conversa', rotulo: 'Fale com o Caio' },
+];
+---
+
+<Fragment slot="head">
+  <link rel="preload" href={gotica} as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href={playfair} as="font" type="font/woff2" crossorigin />
+  <style is:inline set:html={fontes}></style>
+</Fragment>
+
+<a class="j-pular" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="j-mesa">
+  <div class="j-folha">
+    <header class="j-cabeca">
+      <div class="j-topo">
+        <p class="j-orelha j-orelha-esq">
+          <span class="j-orelha-tit">Nesta edição</span>
+          {projetos.length} reportagens de tecnologia, a carreira completa e {stack.length} páginas de classificados.
+        </p>
+        <div class="j-titulo">
+          <p class="j-marca" lang="pt-BR">Gazeta do Caio</p>
+          <p class="j-lema">“Plataformas, integrações e automações, todos os dias”</p>
+        </div>
+        <p class="j-orelha j-orelha-dir">
+          <span class="j-orelha-tit">Edição digital</span>
+          Grátis. Aceita-se café como gorjeta.
+        </p>
+      </div>
+
+      <div class="j-fio j-fio-duplo" aria-hidden="true"></div>
+      <p class="j-edicao">
+        <span>Ano {ano} · Nº {numero}</span>
+        <span>{cidade}, <time datetime={dataIso}>{dataExtenso}</time></span>
+        <span>Preço: grátis</span>
+      </p>
+      <div class="j-fio j-fio-duplo j-fio-inv" aria-hidden="true"></div>
+
+      <nav class="j-indice" aria-label="Seções do jornal">
+        <ul>
+          {
+            secoes.map((s) => (
+              <li>
+                <a href={s.href}>{s.rotulo}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </header>
+
+    <div class="j-cotacoes">
+      <p class="j-cot-rot">Mercado<br />da stack</p>
+      <div class="j-cot-janela" aria-hidden="true">
+        <ul class="j-cot-faixa">
+          {
+            [0, 1].map(() =>
+              cotacoes.map((c) => (
+                <li>
+                  <b>{c.sigla}</b> {c.valor}{' '}
+                  <span class={c.estavel ? 'j-est' : 'j-alta'}>
+                    <i />
+                    {c.estavel ? '0,0%' : `+${c.variacao}%`}
+                  </span>
+                </li>
+              )),
+            )
+          }
+        </ul>
+      </div>
+      <button type="button" class="j-cot-pausa" data-pausa>Pausar<span class="j-sr"> cotações</span></button>
+    </div>
+
+    <main id="conteudo" tabindex="-1">
+      <div class="j-grade j-primeira">
+        <article class="j-manchete" id="manchete" aria-labelledby="j-h1">
+          <p class="j-chapeu">Perfil · Tecnologia</p>
+          <h1 id="j-h1">{manchete}</h1>
+          <p class="j-fina">{linhaFina}</p>
+          <p class="j-assina">
+            Por <b>Redação da Gazeta</b> · {pessoa.local} · Atualizado em <time datetime={dataIso}>{dataCurta}</time>
+          </p>
+
+          <figure class="j-foto">
+            <Ilustracao />
+            <figcaption>
+              A estação de trabalho onde nascem as integrações. <span>Arte: redação</span>
+            </figcaption>
+          </figure>
+
+          <div class="j-texto j-colunas" lang="pt-BR">
+            <p class="j-lugar">{cidade} —</p>
+            <p class="j-capitular">{sobre.paragrafo}</p>
+            <p>
+              Em suas próprias palavras, ele constrói {emSuasPalavras}. É o tipo de trabalho que não aparece na vitrine, mas
+              segura a operação inteira de pé.
+            </p>
+            {
+              feito && (
+                <p>
+                  Entre os feitos recentes, conta à reportagem: <q>{feito}</q>
+                </p>
+              )
+            }
+            {
+              formacao && (
+                <p>
+                  <b>Formação.</b> {formacao.linhas.join(', ')}.
+                  {idiomas && (
+                    <>
+                      {' '}
+                      <b>Idiomas.</b> {idiomas.linhas[0]}.
+                    </>
+                  )}
+                </p>
+              )
+            }
+            <p class="j-continua"><a href="#carreira">Continua em Carreira, página A2</a></p>
+          </div>
+        </article>
+
+        <aside class="j-trilho" aria-label="Destaques da edição">
+          <section class="j-caixa j-tempo" aria-labelledby="j-tempo-tit">
+            <h2 id="j-tempo-tit">Previsão do tempo</h2>
+            <p class="j-tempo-local">{pessoa.local}</p>
+            <div class="j-tempo-hoje">
+              <svg viewBox="0 0 64 64" aria-hidden="true" class="j-sol">
+                <g class="j-raios" stroke="#1b1712" stroke-width="3" stroke-linecap="round">
+                  {Array.from({ length: 8 }, (_, i) => <line x1="32" y1="4" x2="32" y2="12" transform={`rotate(${i * 45} 32 32)`} />)}
+                </g>
+                <circle cx="32" cy="32" r="13" fill="#8a1c1c" />
+                <path d="M30 52 q-14 0 -14 -10 q0 -10 12 -9 q4 -9 14 -6 q10 3 8 13 q8 2 6 8 q-2 4 -8 4 z" fill="#f1ead8" stroke="#1b1712" stroke-width="2.5" />
+              </svg>
+              <p class="j-tempo-num">100%</p>
+            </div>
+            <p class="j-tempo-frase">de chance de estar <b>{pessoa.status.toLowerCase()}</b>.</p>
+            <dl class="j-tempo-dl">
+              <div><dt>Máxima</dt><dd>dedicação</dd></div>
+              <div><dt>Mínima</dt><dd>burocracia</dd></div>
+              <div><dt>Ventos</dt><dd>a favor, vindos do CI/CD</dd></div>
+              <div><dt>Umidade</dt><dd>só a do café</dd></div>
+            </dl>
+          </section>
+
+          <div class="j-carimbo" aria-hidden="true">
+            <span>{pessoa.status}</span>
+          </div>
+
+          <section class="j-caixa j-numeros" aria-labelledby="j-num-tit">
+            <h2 id="j-num-tit">Em números</h2>
+            <ul>
+              {
+                numeros.map((x) => (
+                  <li>
+                    <b>{x.n}</b> <span>{x.rotulo}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </section>
+
+          <figure class="j-frase">
+            <blockquote>
+              <p>Eu construo {frase[0]} para {frase[1]}.</p>
+            </blockquote>
+            <figcaption>Frase do dia · {pessoa.nomeCurto}</figcaption>
+          </figure>
+
+          <section class="j-caixa j-ficha" aria-labelledby="j-ficha-tit">
+            <h2 id="j-ficha-tit">Ficha</h2>
+            <dl>
+              <div><dt>Nome</dt><dd>{pessoa.nomeCompleto}</dd></div>
+              <div><dt>Cargo</dt><dd>{pessoa.cargo}</dd></div>
+              <div><dt>Local</dt><dd>{pessoa.local}</dd></div>
+              <div><dt>Status</dt><dd>{pessoa.status}</dd></div>
+              {
+                sobre.resumo.map((r) => (
+                  <div>
+                    <dt>{r.rotulo}</dt>
+                    <dd>{r.linhas.join(' · ')}</dd>
+                  </div>
+                ))
+              }
+            </dl>
+          </section>
+        </aside>
+      </div>
+
+      <div class="j-grade j-segunda">
+        <section class="j-secao j-tec" id="projetos" aria-labelledby="j-projetos-tit">
+          <div class="j-cabeco-secao">
+            <h2 id="j-projetos-tit">Tecnologia</h2>
+            <p>Projetos em destaque</p>
+          </div>
+          <div class="j-fio j-fio-grosso" aria-hidden="true"></div>
+          <div class="j-reportagens">
+            {
+              projetos.map((p) => {
+                const pq = destaque(p.itens);
+                return (
+                  <article class="j-materia" id={`proj-${p.id}`} aria-labelledby={`j-p-${p.id}`}>
+                    <p class="j-chapeu">
+                      {p.codigo} · {p.meta.join(' · ')}
+                    </p>
+                    <h3 id={`j-p-${p.id}`}>{p.nome}</h3>
+                    <p class="j-fina j-fina-p">{p.itens[0]}</p>
+                    <blockquote class="j-olho" aria-hidden="true">
+                      <p>{pq}</p>
+                    </blockquote>
+                    <div class="j-texto" lang="pt-BR">
+                      {p.itens.slice(1).map((i, k) => (
+                        <p class={k === 0 ? 'j-capitular j-capitular-p' : undefined}>{i}</p>
+                      ))}
+                    </div>
+                    <p class="j-tags">
+                      <b>Palavras-chave:</b> {p.tags.join(' · ')}
+                    </p>
+                    {p.links.length > 0 && (
+                      <p class="j-tags">
+                        {p.links.map((l) => (
+                          <a href={l.url} target="_blank" rel="noopener noreferrer">
+                            {l.rotulo}
+                          </a>
+                        ))}
+                      </p>
+                    )}
+                  </article>
+                );
+              })
+            }
+          </div>
+          <aside class="j-nota" aria-label="Serviço ao leitor">
+            <p class="j-nota-tit">Serviço ao leitor</p>
+            <p>
+              Ficou com dúvida sobre algum projeto? A redação mantém um <a href="/conversa">chat sobre o currículo</a>, e o
+              código público está no <a href={contato.github.url} target="_blank" rel="noopener noreferrer">GitHub</a>.
+            </p>
+          </aside>
+        </section>
+
+        <section class="j-secao j-carreira" id="carreira" aria-labelledby="j-carreira-tit">
+          <div class="j-cabeco-secao">
+            <h2 id="j-carreira-tit">Carreira</h2>
+            <p>Página A2</p>
+          </div>
+          <div class="j-fio j-fio-grosso" aria-hidden="true"></div>
+          <ol class="j-linha-tempo">
+            {
+              trajetoria.map((t) => (
+                <li>
+                  <article aria-labelledby={`j-t-${t.periodo.replace(/\W+/g, '')}`}>
+                    <p class="j-data">{t.periodo}</p>
+                    <h3 id={`j-t-${t.periodo.replace(/\W+/g, '')}`}>{t.cargo}</h3>
+                    <p class="j-onde">{t.lugar}</p>
+                    {t.itens.length > 0 && (
+                      <ul class="j-texto" lang="pt-BR">
+                        {t.itens.map((i) => (
+                          <li>{i}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </article>
+                </li>
+              ))
+            }
+          </ol>
+        </section>
+      </div>
+
+      <section class="j-secao j-classificados" id="classificados" aria-labelledby="j-class-tit">
+        <div class="j-cabeco-secao">
+          <h2 id="j-class-tit">Classificados</h2>
+          <p>Stack · {totalStack} anúncios · ofertas válidas enquanto durar o café</p>
+        </div>
+        <div class="j-fio j-fio-grosso" aria-hidden="true"></div>
+        <div class="j-anuncios">
+          {
+            stack.map((g, i) => (
+              <section class={`j-anuncio j-anuncio-${i % 3}`} aria-labelledby={`j-a-${i}`}>
+                <p class="j-anuncio-tipo" aria-hidden="true">
+                  {['Oferece-se', 'Vende-se experiência', 'Garantia', 'Ferramental', 'Novidade', 'Fala-se'][i % 6]}
+                </p>
+                <h3 id={`j-a-${i}`}>{g.grupo}</h3>
+                <ul>
+                  {g.itens.map((x) => (
+                    <li>{x}</li>
+                  ))}
+                </ul>
+                <p class="j-anuncio-pe">Tratar c/ Caio · {cidade}</p>
+              </section>
+            ))
+          }
+        </div>
+      </section>
+
+      <div class="j-grade j-terceira">
+        <section class="j-secao j-expediente" id="expediente" aria-labelledby="j-exp-tit">
+          <div class="j-cabeco-secao">
+            <h2 id="j-exp-tit">Expediente</h2>
+          </div>
+          <div class="j-fio" aria-hidden="true"></div>
+          <dl>
+            <div><dt>Editor-chefe, repórter e estagiário</dt><dd>{pessoa.nomeCompleto} ({pessoa.apelido})</dd></div>
+            <div><dt>Redação</dt><dd>{pessoa.local}</dd></div>
+            <div>
+              <dt>LinkedIn</dt>
+              <dd><a href={contato.linkedin.url} target="_blank" rel="noopener noreferrer">{contato.linkedin.rotulo}</a></dd>
+            </div>
+            <div>
+              <dt>GitHub</dt>
+              <dd><a href={contato.github.url} target="_blank" rel="noopener noreferrer">{contato.github.rotulo}</a></dd>
+            </div>
+            <div><dt>Atendimento ao leitor</dt><dd><a href="/conversa">Converse com o Caio pelo chat</a></dd></div>
+          </dl>
+        </section>
+
+        <section class="j-secao j-cartas" aria-labelledby="j-cartas-tit">
+          <div class="j-cabeco-secao">
+            <h2 id="j-cartas-tit">Cartas à redação</h2>
+          </div>
+          <div class="j-fio" aria-hidden="true"></div>
+          <div class="j-cupom">
+            <p class="j-cupom-tit">Tem uma vaga, um projeto ou uma pauta?</p>
+            <p>A redação responde pessoalmente. Escreva para</p>
+            <p class="j-cupom-mail"><a href={`mailto:${contato.email}`}>{contato.email}</a></p>
+            <p class="j-cupom-pe">Recorte, preencha e envie. Ou só clique no endereço acima.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="j-rodape">
+      <div class="j-fio j-fio-duplo" aria-hidden="true"></div>
+      <div class="j-rodape-in">
+        <p>
+          <b>Gazeta do Caio</b> · Ano {ano} · Nº {numero} · Impressa digitalmente em {pessoa.local}. Nenhuma árvore foi
+          derrubada nesta edição.
+        </p>
+        <svg class="j-barras" viewBox="0 0 120 40" aria-hidden="true">
+          {
+            Array.from({ length: 38 }, (_, i) => {
+              const w = [1, 2, 1, 3][hash(String(i)) % 4];
+              return <rect x={i * 3.1} y="0" width={w} height={i % 9 === 0 ? 40 : 34} fill="#1b1712" />;
+            })
+          }
+        </svg>
+        <p class="j-folio">Página A1</p>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<script>
+  import './main';
+</script>
+
+<style is:global>
+  html[data-estilo='jornal'] {
+    --papel: #f1ead8;
+    --papel2: #e9e0c9;
+    --tinta: #1b1712;
+    --tinta2: #4a4239;
+    --vermelho: #8a1c1c;
+    --mesa: #2e2822;
+    --fio: #1b1712;
+    --serif: 'Source Serif 4 Variable', 'Iowan Old Style', Georgia, serif;
+    --titular: 'Playfair Display Variable', 'Times New Roman', serif;
+    --gotica: 'UnifrakturMaguntia', 'Old English Text MT', serif;
+    color-scheme: light;
+  }
+  html[data-estilo='jornal'],
+  html[data-estilo='jornal'] body {
+    margin: 0;
+    padding: 0;
+  }
+  html[data-estilo='jornal'] *,
+  html[data-estilo='jornal'] *::before,
+  html[data-estilo='jornal'] *::after {
+    box-sizing: border-box;
+  }
+  html[data-estilo='jornal'] :where(h1, h2, h3, p, ul, ol, dl, dd, figure, blockquote) {
+    margin: 0;
+    padding: 0;
+  }
+  html[data-estilo='jornal'] :where(ul, ol) {
+    list-style: none;
+  }
+  html[data-estilo='jornal'] :where(button) {
+    font: inherit;
+  }
+
+  html[data-estilo='jornal'] body {
+    min-height: 100dvh;
+    background:
+      radial-gradient(ellipse at 50% 0%, #4a4037 0%, transparent 60%),
+      repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 9px),
+      var(--mesa);
+    color: var(--tinta);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.5;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  html[data-estilo='jornal'] ::selection {
+    background: var(--vermelho);
+    color: var(--papel);
+  }
+  html[data-estilo='jornal'] :focus-visible {
+    outline: 3px solid var(--vermelho);
+    outline-offset: 2px;
+  }
+  html[data-estilo='jornal'] a {
+    color: inherit;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  html[data-estilo='jornal'] a:hover {
+    color: var(--vermelho);
+  }
+  html[data-estilo='jornal'] .j-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  html[data-estilo='jornal'] .j-pular {
+    position: fixed;
+    left: 16px;
+    top: 16px;
+    z-index: 100;
+    padding: 8px 14px;
+    background: var(--tinta);
+    color: var(--papel);
+    transform: translateY(-200%);
+  }
+  html[data-estilo='jornal'] .j-pular:focus {
+    transform: none;
+  }
+
+  /* ------------------------------------------------------------- a folha */
+  html[data-estilo='jornal'] .j-mesa {
+    padding: clamp(0px, 3vw, 40px) clamp(0px, 3vw, 40px) clamp(80px, 8vw, 110px);
+    overflow: hidden;
+  }
+  html[data-estilo='jornal'] .j-folha {
+    position: relative;
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: clamp(16px, 3vw, 44px) clamp(16px, 3.4vw, 52px) 28px;
+    background-color: var(--papel);
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .08 0 0 0 0 .05 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      radial-gradient(ellipse 60% 40% at 18% 12%, rgba(160, 120, 50, 0.08), transparent 70%),
+      radial-gradient(ellipse 50% 50% at 85% 70%, rgba(150, 110, 40, 0.07), transparent 70%),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.05), transparent 3%, transparent 97%, rgba(0, 0, 0, 0.05));
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.3) inset,
+      0 30px 60px -20px rgba(0, 0, 0, 0.6),
+      0 10px 20px rgba(0, 0, 0, 0.25);
+  }
+  /* vinco da dobra */
+  html[data-estilo='jornal'] .j-folha::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 40px;
+    transform: translateY(-50%);
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(0, 0, 0, 0.035) 45%,
+      rgba(255, 255, 255, 0.35) 50%,
+      rgba(0, 0, 0, 0.05) 52%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* fios (réguas) */
+  html[data-estilo='jornal'] .j-fio {
+    height: 1px;
+    background: var(--fio);
+  }
+  html[data-estilo='jornal'] .j-fio-grosso {
+    height: 4px;
+    margin-bottom: 14px;
+  }
+  html[data-estilo='jornal'] .j-fio-duplo {
+    height: 7px;
+    background: linear-gradient(to bottom, var(--fio) 0 4px, transparent 4px 6px, var(--fio) 6px 7px);
+  }
+  html[data-estilo='jornal'] .j-fio-inv {
+    background: linear-gradient(to bottom, var(--fio) 0 1px, transparent 1px 3px, var(--fio) 3px 7px);
+  }
+
+  /* --------------------------------------------------------- cabeçalho */
+  html[data-estilo='jornal'] .j-topo {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    padding-bottom: 10px;
+  }
+  html[data-estilo='jornal'] .j-orelha {
+    max-width: 210px;
+    padding: 10px 12px;
+    border: 1px solid var(--tinta);
+    font-size: 13.5px;
+    line-height: 1.35;
+    text-align: center;
+  }
+  html[data-estilo='jornal'] .j-orelha-dir {
+    justify-self: end;
+  }
+  html[data-estilo='jornal'] .j-orelha-tit {
+    display: block;
+    font-family: var(--titular);
+    font-weight: 800;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    color: var(--vermelho);
+  }
+  html[data-estilo='jornal'] .j-titulo {
+    text-align: center;
+  }
+  html[data-estilo='jornal'] .j-marca {
+    font-family: var(--gotica);
+    font-size: clamp(46px, 9.4vw, 138px);
+    line-height: 0.95;
+    letter-spacing: 0.005em;
+    white-space: nowrap;
+    color: var(--tinta);
+  }
+  html[data-estilo='jornal'] .j-lema {
+    margin-top: 6px;
+    font-family: var(--titular);
+    font-style: italic;
+    font-size: clamp(13px, 1.2vw, 16px);
+    color: var(--tinta2);
+  }
+  html[data-estilo='jornal'] .j-edicao {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px 18px;
+    flex-wrap: wrap;
+    padding: 6px 2px;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  html[data-estilo='jornal'] .j-indice ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0;
+    padding: 8px 0 0;
+  }
+  html[data-estilo='jornal'] .j-indice li + li {
+    border-left: 1px solid var(--tinta);
+  }
+  html[data-estilo='jornal'] .j-indice a {
+    display: inline-block;
+    padding: 4px 16px;
+    font-family: var(--titular);
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+  }
+  html[data-estilo='jornal'] .j-indice a:hover {
+    color: var(--vermelho);
+    text-decoration: underline;
+  }
+
+  /* ----------------------------------------------------- cotações */
+  html[data-estilo='jornal'] .j-cotacoes {
+    display: flex;
+    align-items: stretch;
+    margin: 12px 0 26px;
+    border-top: 1px solid var(--tinta);
+    border-bottom: 1px solid var(--tinta);
+    background: var(--tinta);
+    color: var(--papel);
+    font-size: 14px;
+  }
+  html[data-estilo='jornal'] .j-cot-rot {
+    flex: none;
+    padding: 4px 12px;
+    font-family: var(--titular);
+    font-weight: 800;
+    font-size: 12px;
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--vermelho);
+    display: flex;
+    align-items: center;
+  }
+  html[data-estilo='jornal'] .j-cot-janela {
+    flex: 1;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+  }
+  html[data-estilo='jornal'] .j-cot-faixa {
+    display: flex;
+    width: max-content;
+    padding: 7px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  html[data-estilo='jornal'] .j-cot-faixa li {
+    padding: 0 18px;
+    white-space: nowrap;
+    border-right: 1px solid rgba(241, 234, 216, 0.25);
+  }
+  html[data-estilo='jornal'] .j-cot-faixa b {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  html[data-estilo='jornal'] .j-alta {
+    color: #9fe0a3;
+  }
+  html[data-estilo='jornal'] .j-est {
+    color: #e9d9a8;
+  }
+  html[data-estilo='jornal'] .j-alta i,
+  html[data-estilo='jornal'] .j-est i {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-right: 4px;
+    vertical-align: 1px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 8px solid currentColor;
+  }
+  html[data-estilo='jornal'] .j-est i {
+    border: 0;
+    width: 9px;
+    height: 2px;
+    background: currentColor;
+    vertical-align: 3px;
+  }
+  html[data-estilo='jornal'] .j-cot-pausa {
+    display: none;
+    flex: none;
+    padding: 4px 12px;
+    border: 0;
+    border-left: 1px solid rgba(241, 234, 216, 0.35);
+    background: transparent;
+    color: var(--papel);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+  html[data-estilo='jornal'] .j-cot-pausa:hover {
+    background: rgba(241, 234, 216, 0.12);
+  }
+  html[data-estilo='jornal'] .j-cot-pausa:focus-visible {
+    outline-color: var(--papel);
+    outline-offset: -4px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html[data-estilo='jornal'] .j-cot-faixa {
+      animation: j-cotacao 70s linear infinite;
+    }
+    html[data-estilo='jornal'] .j-cotacoes:hover .j-cot-faixa,
+    html[data-estilo='jornal'] .j-cotacoes.j-pausado .j-cot-faixa {
+      animation-play-state: paused;
+    }
+    html[data-estilo='jornal'] .j-cot-pausa {
+      display: block;
+    }
+  }
+  @keyframes j-cotacao {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* ----------------------------------------------------- grade de colunas */
+  html[data-estilo='jornal'] main {
+    outline: none;
+  }
+  html[data-estilo='jornal'] .j-grade {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 28px;
+  }
+  html[data-estilo='jornal'] .j-primeira > .j-manchete {
+    grid-column: 1 / 5;
+    padding-right: 28px;
+    border-right: 1px solid var(--tinta);
+    margin-right: -14px;
+  }
+  html[data-estilo='jornal'] .j-primeira > .j-trilho {
+    grid-column: 5 / 7;
+  }
+  html[data-estilo='jornal'] .j-segunda {
+    margin-top: 44px;
+  }
+  html[data-estilo='jornal'] .j-segunda > .j-tec {
+    grid-column: 1 / 5;
+  }
+  html[data-estilo='jornal'] .j-segunda > .j-carreira {
+    grid-column: 5 / 7;
+  }
+  html[data-estilo='jornal'] .j-terceira {
+    margin-top: 44px;
+  }
+  html[data-estilo='jornal'] .j-terceira > .j-expediente {
+    grid-column: 1 / 4;
+  }
+  html[data-estilo='jornal'] .j-terceira > .j-cartas {
+    grid-column: 4 / 7;
+  }
+
+  /* ----------------------------------------------------- manchete */
+  html[data-estilo='jornal'] .j-chapeu {
+    font-family: var(--titular);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--vermelho);
+  }
+  html[data-estilo='jornal'] .j-manchete h1 {
+    margin: 6px 0 14px;
+    font-family: var(--titular);
+    font-weight: 900;
+    font-size: clamp(36px, 5.1vw, 78px);
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+    hyphens: manual;
+  }
+  html[data-estilo='jornal'] .j-fina {
+    font-family: var(--titular);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(19px, 1.7vw, 24px);
+    line-height: 1.3;
+    color: var(--tinta2);
+    text-wrap: pretty;
+  }
+  html[data-estilo='jornal'] .j-assina {
+    margin: 14px 0 18px;
+    padding: 6px 0;
+    border-top: 1px solid var(--tinta);
+    border-bottom: 1px solid var(--tinta);
+    font-size: 13.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  html[data-estilo='jornal'] .j-assina b {
+    font-weight: 700;
+  }
+  html[data-estilo='jornal'] .j-foto {
+    margin: 0 0 18px;
+  }
+  html[data-estilo='jornal'] .j-ilustra {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: contrast(1.05);
+    mix-blend-mode: multiply;
+  }
+  html[data-estilo='jornal'] .j-foto figcaption {
+    margin-top: 6px;
+    font-size: 13.5px;
+    font-style: italic;
+    color: var(--tinta2);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  html[data-estilo='jornal'] .j-foto figcaption span {
+    font-style: normal;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+
+  /* texto corrido */
+  html[data-estilo='jornal'] .j-texto {
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphenate-limit-chars: 6 3 3;
+  }
+  html[data-estilo='jornal'] .j-texto p + p {
+    text-indent: 1.4em;
+  }
+  html[data-estilo='jornal'] .j-colunas {
+    columns: 2 17em;
+    column-gap: 30px;
+    column-rule: 1px solid rgba(27, 23, 18, 0.45);
+  }
+  html[data-estilo='jornal'] .j-capitular::first-letter {
+    float: left;
+    margin: 0.06em 0.08em 0 0;
+    font-family: var(--titular);
+    font-weight: 900;
+    font-size: 4.3em;
+    line-height: 0.8;
+    color: var(--vermelho);
+  }
+  html[data-estilo='jornal'] .j-capitular-p::first-letter {
+    font-size: 3.4em;
+  }
+  html[data-estilo='jornal'] .j-lugar {
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 4px;
+  }
+  html[data-estilo='jornal'] .j-texto .j-lugar + p {
+    text-indent: 0;
+  }
+  html[data-estilo='jornal'] .j-texto q {
+    font-style: italic;
+  }
+  html[data-estilo='jornal'] .j-continua {
+    margin-top: 10px;
+    text-indent: 0 !important;
+    font-style: italic;
+    font-size: 15px;
+    text-align: right;
+  }
+
+  /* ------------------------------------------------- trilho direito */
+  html[data-estilo='jornal'] .j-trilho {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding-left: 14px;
+  }
+  html[data-estilo='jornal'] .j-caixa {
+    border: 1px solid var(--tinta);
+    outline: 1px solid var(--tinta);
+    outline-offset: 3px;
+    padding: 14px 16px 16px;
+  }
+  html[data-estilo='jornal'] .j-caixa h2 {
+    font-family: var(--titular);
+    font-weight: 900;
+    font-size: 21px;
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding-bottom: 6px;
+    border-bottom: 3px double var(--tinta);
+    margin-bottom: 10px;
+  }
+  html[data-estilo='jornal'] .j-tempo-local {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  html[data-estilo='jornal'] .j-tempo-hoje {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 6px 0 2px;
+  }
+  html[data-estilo='jornal'] .j-sol {
+    width: 74px;
+    height: 74px;
+    flex: none;
+  }
+  html[data-estilo='jornal'] .j-raios {
+    transform-origin: 32px 32px;
+  }
+  html[data-estilo='jornal'] .j-tempo-num {
+    font-family: var(--titular);
+    font-weight: 900;
+    font-size: 58px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  html[data-estilo='jornal'] .j-tempo-frase {
+    font-style: italic;
+    font-size: 17px;
+    line-height: 1.3;
+  }
+  html[data-estilo='jornal'] .j-tempo-frase b {
+    font-style: normal;
+    color: var(--vermelho);
+  }
+  html[data-estilo='jornal'] .j-tempo-dl,
+  html[data-estilo='jornal'] .j-ficha dl {
+    margin-top: 10px;
+    font-size: 14.5px;
+    line-height: 1.35;
+  }
+  html[data-estilo='jornal'] .j-tempo-dl div,
+  html[data-estilo='jornal'] .j-ficha dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    border-top: 1px dotted rgba(27, 23, 18, 0.55);
+  }
+  html[data-estilo='jornal'] .j-ficha dl div {
+    flex-direction: column;
+    gap: 0;
+  }
+  html[data-estilo='jornal'] .j-tempo-dl dt,
+  html[data-estilo='jornal'] .j-ficha dt {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+  html[data-estilo='jornal'] .j-tempo-dl dd {
+    text-align: right;
+    font-style: italic;
+  }
+  html[data-estilo='jornal'] .j-carimbo {
+    align-self: center;
+    margin: 4px 0;
+    padding: 8px 16px;
+    border: 4px double var(--vermelho);
+    color: var(--vermelho);
+    font-family: var(--titular);
+    font-weight: 900;
+    font-size: 22px;
+    line-height: 1.05;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transform: rotate(-7deg);
+    opacity: 0.88;
+    mix-blend-mode: multiply;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.9 1.45'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.9 1.45'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+
+  /* em números, frase do dia e nota */
+  html[data-estilo='jornal'] .j-numeros ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  html[data-estilo='jornal'] .j-numeros li {
+    padding: 8px 6px 8px 0;
+    border-top: 1px dotted rgba(27, 23, 18, 0.55);
+    line-height: 1.15;
+  }
+  html[data-estilo='jornal'] .j-numeros li:nth-child(-n + 2) {
+    border-top: 0;
+  }
+  html[data-estilo='jornal'] .j-numeros b {
+    display: block;
+    font-family: var(--titular);
+    font-weight: 900;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--vermelho);
+    font-variant-numeric: lining-nums;
+  }
+  html[data-estilo='jornal'] .j-numeros span {
+    font-size: 13.5px;
+    font-style: italic;
+  }
+  html[data-estilo='jornal'] .j-frase {
+    margin: 0;
+    padding: 4px 4px 0;
+    text-align: center;
+  }
+  html[data-estilo='jornal'] .j-frase blockquote {
+    font-family: var(--titular);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 25px;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  html[data-estilo='jornal'] .j-frase blockquote p::before {
+    content: '“';
+    display: block;
+    font-size: 64px;
+    line-height: 0.6;
+    color: var(--vermelho);
+    font-style: normal;
+  }
+  html[data-estilo='jornal'] .j-frase figcaption {
+    margin-top: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  html[data-estilo='jornal'] .j-nota {
+    margin-top: 28px;
+    padding: 12px 16px;
+    background: var(--tinta);
+    color: var(--papel);
+    font-size: 15.5px;
+  }
+  html[data-estilo='jornal'] .j-nota a {
+    color: var(--papel);
+  }
+  html[data-estilo='jornal'] .j-nota a:hover {
+    color: #f3c2b8;
+  }
+  html[data-estilo='jornal'] .j-nota a:focus-visible {
+    outline-color: var(--papel);
+  }
+  html[data-estilo='jornal'] .j-nota-tit {
+    font-family: var(--titular);
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #f3c2b8;
+    margin-bottom: 2px;
+  }
+
+  /* ----------------------------------------------------- seções */
+  html[data-estilo='jornal'] .j-cabeco-secao {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 16px;
+    flex-wrap: wrap;
+    padding-bottom: 6px;
+  }
+  html[data-estilo='jornal'] .j-cabeco-secao h2 {
+    font-family: var(--titular);
+    font-weight: 900;
+    font-size: clamp(28px, 2.6vw, 38px);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+  html[data-estilo='jornal'] .j-cabeco-secao p {
+    font-size: 13.5px;
+    font-style: italic;
+    color: var(--tinta2);
+  }
+
+  /* reportagens */
+  html[data-estilo='jornal'] .j-reportagens {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+  }
+  html[data-estilo='jornal'] .j-materia + .j-materia {
+    border-left: 1px solid var(--tinta);
+    padding-left: 28px;
+    margin-left: -14px;
+  }
+  html[data-estilo='jornal'] .j-materia h3 {
+    margin: 4px 0 8px;
+    font-family: var(--titular);
+    font-weight: 900;
+    font-size: clamp(30px, 3vw, 46px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  html[data-estilo='jornal'] .j-fina-p {
+    font-size: 19px;
+    margin-bottom: 12px;
+  }
+  html[data-estilo='jornal'] .j-olho {
+    margin: 4px 0 14px;
+    padding: 12px 0 10px;
+    border-top: 3px solid var(--tinta);
+    border-bottom: 1px solid var(--tinta);
+    font-family: var(--titular);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1.22;
+    color: var(--vermelho);
+    text-wrap: balance;
+  }
+  html[data-estilo='jornal'] .j-olho p::before {
+    content: '“';
+    font-size: 1.6em;
+    line-height: 0;
+    vertical-align: -0.3em;
+    margin-right: 2px;
+  }
+  html[data-estilo='jornal'] .j-tags {
+    margin-top: 12px;
+    padding-top: 6px;
+    border-top: 1px dotted var(--tinta);
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
+  html[data-estilo='jornal'] .j-tags b {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+  }
+
+  /* carreira */
+  html[data-estilo='jornal'] .j-carreira {
+    padding-left: 14px;
+    border-left: 1px solid var(--tinta);
+    margin-left: -14px;
+    padding-left: 28px;
+  }
+  html[data-estilo='jornal'] .j-linha-tempo > li + li {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--tinta);
+  }
+  html[data-estilo='jornal'] .j-data {
+    display: inline-block;
+    padding: 1px 8px;
+    background: var(--tinta);
+    color: var(--papel);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  html[data-estilo='jornal'] .j-linha-tempo h3 {
+    margin: 6px 0 2px;
+    font-family: var(--titular);
+    font-weight: 800;
+    font-size: 23px;
+    line-height: 1.1;
+  }
+  html[data-estilo='jornal'] .j-onde {
+    font-style: italic;
+    font-size: 15px;
+    color: var(--tinta2);
+    margin-bottom: 6px;
+  }
+  html[data-estilo='jornal'] .j-linha-tempo ul li {
+    position: relative;
+    padding-left: 14px;
+    font-size: 15.5px;
+    line-height: 1.45;
+  }
+  html[data-estilo='jornal'] .j-linha-tempo ul li + li {
+    margin-top: 4px;
+  }
+  html[data-estilo='jornal'] .j-linha-tempo ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 6px;
+    height: 6px;
+    background: var(--vermelho);
+  }
+
+  /* classificados */
+  html[data-estilo='jornal'] .j-classificados {
+    margin-top: 44px;
+  }
+  html[data-estilo='jornal'] .j-anuncios {
+    columns: 6 170px;
+    column-gap: 14px;
+    column-rule: 1px solid var(--tinta);
+  }
+  html[data-estilo='jornal'] .j-anuncio {
+    break-inside: avoid;
+    margin-bottom: 14px;
+    padding: 10px 10px 8px;
+    border: 1px solid var(--tinta);
+    font-size: 14.5px;
+    line-height: 1.35;
+  }
+  html[data-estilo='jornal'] .j-anuncio-1 {
+    border-width: 3px;
+  }
+  html[data-estilo='jornal'] .j-anuncio-2 {
+    border-style: dashed;
+  }
+  html[data-estilo='jornal'] .j-anuncio-tipo {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--vermelho);
+  }
+  html[data-estilo='jornal'] .j-anuncio h3 {
+    font-family: var(--titular);
+    font-weight: 900;
+    font-size: 21px;
+    line-height: 1.05;
+    text-transform: uppercase;
+    margin: 2px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--tinta);
+  }
+  html[data-estilo='jornal'] .j-anuncio ul li::before {
+    content: '· ';
+    font-weight: 700;
+  }
+  html[data-estilo='jornal'] .j-anuncio-pe {
+    margin-top: 6px;
+    font-size: 12px;
+    font-style: italic;
+    text-align: right;
+  }
+
+  /* expediente e cartas */
+  html[data-estilo='jornal'] .j-expediente dl {
+    margin-top: 10px;
+    columns: 2 220px;
+    column-gap: 24px;
+  }
+  html[data-estilo='jornal'] .j-expediente dl div {
+    break-inside: avoid;
+    margin-bottom: 10px;
+  }
+  html[data-estilo='jornal'] .j-expediente dt {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  html[data-estilo='jornal'] .j-expediente dd {
+    font-size: 16px;
+  }
+  html[data-estilo='jornal'] .j-cartas {
+    border-left: 1px solid var(--tinta);
+    padding-left: 28px;
+    margin-left: -14px;
+  }
+  html[data-estilo='jornal'] .j-cupom {
+    margin-top: 12px;
+    padding: 18px 20px;
+    border: 2px dashed var(--tinta);
+    text-align: center;
+    background: rgba(255, 255, 255, 0.25);
+  }
+  html[data-estilo='jornal'] .j-cupom-tit {
+    font-family: var(--titular);
+    font-weight: 800;
+    font-size: 24px;
+    line-height: 1.15;
+    margin-bottom: 6px;
+  }
+  html[data-estilo='jornal'] .j-cupom-mail {
+    margin: 10px 0;
+    font-family: var(--titular);
+    font-weight: 700;
+    font-size: clamp(20px, 2.2vw, 28px);
+    overflow-wrap: anywhere;
+  }
+  html[data-estilo='jornal'] .j-cupom-mail a {
+    color: var(--vermelho);
+    text-decoration-thickness: 2px;
+  }
+  html[data-estilo='jornal'] .j-cupom-pe {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--tinta2);
+  }
+
+  /* rodapé */
+  html[data-estilo='jornal'] .j-rodape {
+    margin-top: 40px;
+  }
+  html[data-estilo='jornal'] .j-rodape-in {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-top: 12px;
+    font-size: 13.5px;
+  }
+  html[data-estilo='jornal'] .j-rodape-in p:first-child {
+    flex: 1;
+  }
+  html[data-estilo='jornal'] .j-barras {
+    width: 110px;
+    height: 36px;
+    flex: none;
+  }
+  html[data-estilo='jornal'] .j-folio {
+    font-family: var(--titular);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ----------------------------------------------------- responsivo */
+  @media (max-width: 1100px) {
+    html[data-estilo='jornal'] .j-grade {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    html[data-estilo='jornal'] .j-primeira > .j-manchete,
+    html[data-estilo='jornal'] .j-segunda > .j-tec {
+      grid-column: 1 / -1;
+      border-right: 0;
+      padding-right: 0;
+      margin-right: 0;
+    }
+    html[data-estilo='jornal'] .j-primeira > .j-trilho {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: start;
+      margin-top: 28px;
+      padding-left: 0;
+    }
+    html[data-estilo='jornal'] .j-segunda > .j-carreira {
+      grid-column: 1 / -1;
+      margin-top: 36px;
+      border-left: 0;
+      margin-left: 0;
+      padding-left: 0;
+    }
+    html[data-estilo='jornal'] .j-linha-tempo {
+      columns: 2 300px;
+      column-gap: 28px;
+    }
+    html[data-estilo='jornal'] .j-linha-tempo > li {
+      break-inside: avoid;
+    }
+  }
+  @media (max-width: 760px) {
+    html[data-estilo='jornal'] body {
+      font-size: 16.5px;
+    }
+    html[data-estilo='jornal'] .j-topo {
+      grid-template-columns: 1fr;
+    }
+    html[data-estilo='jornal'] .j-orelha {
+      display: none;
+    }
+    html[data-estilo='jornal'] .j-marca {
+      font-size: clamp(40px, 13.5vw, 90px);
+    }
+    html[data-estilo='jornal'] .j-edicao {
+      justify-content: center;
+      text-align: center;
+      font-size: 12px;
+    }
+    html[data-estilo='jornal'] .j-indice a {
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+    html[data-estilo='jornal'] .j-indice li + li {
+      border-left: 0;
+    }
+    html[data-estilo='jornal'] .j-indice ul {
+      gap: 0 2px;
+    }
+    html[data-estilo='jornal'] .j-grade,
+    html[data-estilo='jornal'] .j-reportagens {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    html[data-estilo='jornal'] .j-primeira > .j-trilho {
+      grid-template-columns: 1fr;
+    }
+    html[data-estilo='jornal'] .j-materia + .j-materia,
+    html[data-estilo='jornal'] .j-cartas {
+      border-left: 0;
+      padding-left: 0;
+      margin-left: 0;
+      margin-top: 32px;
+      border-top: 4px solid var(--tinta);
+      padding-top: 16px;
+    }
+    html[data-estilo='jornal'] .j-terceira > * {
+      grid-column: 1 / -1 !important;
+    }
+    html[data-estilo='jornal'] .j-colunas {
+      columns: 1;
+    }
+    html[data-estilo='jornal'] .j-anuncios {
+      columns: 2 140px;
+    }
+    html[data-estilo='jornal'] .j-rodape-in {
+      flex-wrap: wrap;
+    }
+    html[data-estilo='jornal'] .j-rodape-in p:first-child {
+      flex: 1 1 100%;
+    }
+    html[data-estilo='jornal'] .j-cot-rot {
+      display: none;
+    }
+    html[data-estilo='jornal'] .j-linha-tempo ul {
+      text-align: left;
+    }
+    html[data-estilo='jornal'] .j-folha::after {
+      display: none;
+    }
+  }
+</style>

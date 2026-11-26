@@ -1,0 +1,385 @@
+---
+/**
+ * Estilo "Caderno": folha pautada com margem vermelha, letra à mão, post-its,
+ * fichas presas com fita, marca-texto e rabiscos do rough.js que se desenham
+ * na rolagem. Sem JS a página continua um caderno: bordas e sublinhados em CSS.
+ *
+ * Todo o conteúdo vem de src/content/perfil.ts.
+ */
+import './estilo.css';
+import Dev from './Dev.astro';
+import { pessoa, contato, sobre, construo, projetos, stack, trajetoria } from '../../content/perfil';
+
+type Cor = 'amarelo' | 'rosa' | 'verde';
+interface Trecho {
+  t: string;
+  cor?: Cor;
+  id?: string;
+}
+
+/** Quebra um texto em trechos, marcando os termos com marca-texto (o texto final não muda). */
+function marca(texto: string, termos: [string, Cor, string?][]): Trecho[] {
+  let partes: Trecho[] = [{ t: texto }];
+  for (const [termo, cor, id] of termos) {
+    let feito = false;
+    partes = partes.flatMap((p) => {
+      if (feito || p.cor) return [p];
+      const i = p.t.indexOf(termo);
+      if (i < 0) return [p];
+      feito = true;
+      return [{ t: p.t.slice(0, i) }, { t: termo, cor, id }, { t: p.t.slice(i + termo.length) }].filter((x) => x.t);
+    });
+  }
+  return partes;
+}
+
+const sobreTrechos = marca(sobre.paragrafo, [
+  ['ETEC Abdias do Nascimento', 'verde', 'c-alvo-etec'],
+  ['THE LED', 'amarelo', 'c-alvo-led'],
+  ['sistemas e integrações', 'rosa'],
+]);
+
+const destaquesProjetos: Record<string, [string, Cor][]> = {
+  libralizei: [
+    ['LIBRAS', 'amarelo'],
+    ['PostgreSQL', 'verde'],
+    ['MediaPipe', 'rosa'],
+    ['até 75%', 'amarelo'],
+  ],
+  oracle: [
+    ['Oracle Analytics Cloud (OAC)', 'verde'],
+    ['mais de 1.000 dados reais', 'amarelo'],
+    ['realidade aumentada', 'rosa'],
+    ['palco da Oracle', 'amarelo'],
+  ],
+};
+const destaquesTrajetoria: [string, Cor][] = [
+  ['mais de 100 usuários ativos simultâneos', 'amarelo'],
+  ['mais de 400 holerites por mês', 'amarelo'],
+  ['DocuSign', 'verde'],
+  ['pipeline de CI/CD', 'verde'],
+  ['revisor automático de Pull Requests', 'rosa'],
+  ['fórmulas avançadas', 'verde'],
+];
+
+const coresConstruo: Cor[] = ['amarelo', 'rosa', 'verde', 'amarelo', 'rosa'];
+const coresTabs = ['#ffe066', '#ffb3c7', '#b5f2b0', '#bcd4ff', '#ffd6a5'];
+
+const secoes = [
+  { id: 'sobre', rotulo: 'sobre' },
+  { id: 'projetos', rotulo: 'projetos' },
+  { id: 'stack', rotulo: 'stack' },
+  { id: 'trajetoria', rotulo: 'trajetória' },
+  { id: 'contato', rotulo: 'contato' },
+];
+
+/** Checkmarks feitos à mão: leve variação por item. */
+const check = (i: number) => {
+  const a = (i * 37) % 5;
+  const b = (i * 53) % 4;
+  return `M${3 + b * 0.5} ${13 + a * 0.4}c3 2 5 4 7 ${7 - b * 0.3}c4-8 8-13 ${13 + a} ${-17 + b * 0.5}`;
+};
+let nCheck = 0;
+const [agoraCargo] = [trajetoria[0].cargo];
+---
+
+<a class="c-pular" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="c-folha">
+  <header class="c-topo">
+    <div class="c-topo__linha">
+      <p class="c-topo__campo"><span>Assunto:</span> <strong>portfólio do {pessoa.apelido}</strong></p>
+      <p class="c-topo__campo"><span>Ano:</span> <strong>2026</strong></p>
+    </div>
+    <nav class="c-indice" aria-label="Índice">
+      <p class="c-indice__titulo" aria-hidden="true">índice:</p>
+      <ol>
+        {
+          secoes.map((s, i) => (
+            <li style={`--tab:${coresTabs[i]};--i:${i}`}>
+              <a href={`#${s.id}`}>
+                <span class="c-indice__n">{i + 1}.</span> {s.rotulo}
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    <!-- ============ apresentação ============ -->
+    <section class="c-hero" aria-labelledby="c-nome">
+      <div class="c-hero__texto">
+        <p class="c-oi c-anota">oi! eu sou o…</p>
+        <h1 id="c-nome" class="c-h1">
+          <svg class="c-swipe" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M10 78C120 64 260 70 380 66s170-4 206-8" fill="none" stroke="#ffe066" stroke-width="54" stroke-linecap="round" opacity=".9"></path>
+          </svg>
+          <span class="c-h1__texto">{pessoa.nomeCurto}</span>
+        </h1>
+        <p class="c-hero__cargo"><span data-rabisco="sublinhado" data-cor="#2b59c3" data-duplo>{pessoa.cargo}</span></p>
+        <p class="c-hero__apelido">
+          nome completo: {pessoa.nomeCompleto}<br />
+          mas pode chamar de <span data-rabisco="circulo" data-cor="#c0392b">{pessoa.apelido}</span>
+        </p>
+        <p class="c-construo">
+          Eu construo{' '}
+          {
+            construo.map(([a, b], i) => (
+              <>
+                <mark class={`c-marca c-marca--${coresConstruo[i]}`}>{a}</mark> para {b}{i < construo.length - 2 ? ', ' : i === construo.length - 2 ? ' e ' : '.'}
+              </>
+            ))
+          }
+        </p>
+      </div>
+      <figure class="c-hero__desenho">
+        <Dev />
+        <figcaption class="c-anota c-anota--azul">
+          <span class="c-seta-inline" data-rabisco="seta" data-dir="cima" data-cor="#2b59c3" aria-hidden="true"></span>
+          eu, programando (com café)
+        </figcaption>
+      </figure>
+
+      <ul class="c-postits" aria-label="Resumo rápido">
+        <li class="c-postit c-postit--amarelo">
+          <span class="c-fita" aria-hidden="true"></span>
+          <p class="c-postit__rotulo">status</p>
+          <p class="c-postit__valor">{pessoa.status}</p>
+          <svg class="c-postit__icone c-doodle" viewBox="0 0 48 48" aria-hidden="true"><path d="M8 26c5 3 9 8 12 13 6-12 12-22 21-31" fill="none" stroke="#1f7a36" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </li>
+        <li class="c-postit c-postit--rosa">
+          <span class="c-fita" aria-hidden="true"></span>
+          <p class="c-postit__rotulo">local</p>
+          <p class="c-postit__valor">{pessoa.local}</p>
+          <svg class="c-postit__icone c-doodle" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 43C16 32 11 25 11 18a13 13 0 0 1 26 0c0 7-5 14-13 25z" fill="none" stroke="#22304a" stroke-width="3" stroke-linejoin="round"></path><path d="M24 13a5 5 0 1 1 0 10 5 5 0 0 1 0-10z" fill="#c0392b"></path></svg>
+        </li>
+        <li class="c-postit c-postit--verde">
+          <span class="c-fita" aria-hidden="true"></span>
+          <p class="c-postit__rotulo">cargo</p>
+          <p class="c-postit__valor">{pessoa.cargo}</p>
+          <p class="c-postit__extra">hoje: {agoraCargo}</p>
+          <svg class="c-postit__icone c-doodle" viewBox="0 0 48 48" aria-hidden="true"><path d="M10 12h28v20H10zM5 37h38M19 20l-4 3 4 3M29 20l4 3-4 3" fill="none" stroke="#22304a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ============ sobre ============ -->
+    <section class="c-secao" id="sobre" aria-labelledby="c-t-sobre">
+      <h2 id="c-t-sobre" class="c-h2"><span class="c-h2__n" aria-hidden="true">1.</span> <span data-rabisco="sublinhado" data-cor="#2b59c3">Sobre mim</span></h2>
+      <div class="c-sobre">
+        <div class="c-sobre__diario">
+          <p class="c-diario__data c-anota" aria-hidden="true">querido diário,</p>
+          <p class="c-sobre__paragrafo">
+            {sobreTrechos.map((p) => (p.cor ? <mark class={`c-marca c-marca--${p.cor}`} id={p.id}>{p.t}</mark> : p.t))}
+          </p>
+        </div>
+        <aside class="c-notas" aria-label="Anotações na margem">
+          <p class="c-nota c-nota--vermelha" data-alvo="c-alvo-etec">onde tudo começou (2023 – 2025)</p>
+          <p class="c-nota c-nota--azul" data-alvo="c-alvo-led">meu trabalho de agora!</p>
+        </aside>
+      </div>
+      <div class="c-resumo" data-rabisco="caixa" data-cor="#22304a">
+        <p class="c-resumo__titulo c-anota">resumo rápido:</p>
+        <dl class="c-resumo__lista">
+          {
+            sobre.resumo.map((r) => (
+              <div class="c-resumo__item">
+                <dt>{r.rotulo}</dt>
+                {r.linhas.map((l) => (
+                  <dd>{l}</dd>
+                ))}
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </section>
+
+    <!-- ============ projetos ============ -->
+    <section class="c-secao" id="projetos" aria-labelledby="c-t-projetos">
+      <h2 id="c-t-projetos" class="c-h2"><span class="c-h2__n" aria-hidden="true">2.</span> <span data-rabisco="sublinhado" data-cor="#2b59c3">Projetos</span></h2>
+      <div class="c-fichas">
+        {
+          projetos.map((p, i) => (
+            <article class:list={['c-ficha', `c-ficha--${i % 2 ? 'b' : 'a'}`]}>
+              <span class="c-fita c-fita--esq" aria-hidden="true" />
+              <span class="c-fita c-fita--dir" aria-hidden="true" />
+              <header class="c-ficha__topo">
+                <p class="c-ficha__codigo">{p.codigo}</p>
+                <h3 class="c-ficha__nome">{p.nome}</h3>
+                <div class="c-ficha__linha">
+                  <ul class="c-ficha__meta" aria-label="Detalhes">
+                    {p.meta.map((m) => (
+                      <li>{m}</li>
+                    ))}
+                  </ul>
+                  <p class="c-ficha__nota c-anota c-anota--vermelha" aria-hidden="true">
+                    {i === 0 ? 'o TCC!' : 'apresentado no palco! ★'}
+                  </p>
+                </div>
+                {i === 0 ? (
+                  <svg class="c-ficha__icone c-doodle" viewBox="0 0 64 64" aria-hidden="true">
+                    <path
+                      class="c-traco-rolagem"
+                      d="M22 58c-6-6-10-14-12-22-1-4 4-6 6-2l4 8V14c0-4 6-4 6 0v18-24c0-4 6-4 6 0v24-20c0-4 6-4 6 0v22-14c0-4 6-4 6 0v22c0 10-4 16-8 18z"
+                      fill="#ffe066"
+                      stroke="#22304a"
+                      stroke-width="2.6"
+                      stroke-linejoin="round"
+                      stroke-linecap="round"
+                    />
+                    <path class="c-traco-rolagem" d="M50 8c4 2 6 6 6 10M54 4c5 3 8 8 8 14" fill="none" stroke="#2b59c3" stroke-width="2.4" stroke-linecap="round" />
+                  </svg>
+                ) : (
+                  <svg class="c-ficha__icone c-doodle" viewBox="0 0 64 64" aria-hidden="true">
+                    <path class="c-traco-rolagem" d="M6 58c18-1 34 1 52-1M8 56V6" fill="none" stroke="#22304a" stroke-width="2.6" stroke-linecap="round" />
+                    <path class="c-traco-rolagem" d="M15 54V38h8v16M29 54V26h8v28M43 54V16h8v38" fill="#b5f2b0" stroke="#22304a" stroke-width="2.4" stroke-linejoin="round" />
+                    <path class="c-traco-rolagem" d="M14 30c8-6 16-10 24-16l6 2 10-8" fill="none" stroke="#c0392b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                )}
+              </header>
+              <ul class="c-ficha__itens">
+                {p.itens.map((it) => (
+                  <li>
+                    {marca(it, destaquesProjetos[p.id] ?? []).map((t) =>
+                      t.cor ? <mark class={`c-marca c-marca--${t.cor}`}>{t.t}</mark> : t.t,
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <ul class="c-etiquetas" aria-label="Tecnologias">
+                {p.tags.map((t) => (
+                  <li>{t}</li>
+                ))}
+              </ul>
+              {p.links.length > 0 && (
+                <p class="c-ficha__links">
+                  {p.links.map((l) => (
+                    <a href={l.url} rel="noopener" target="_blank">
+                      {l.rotulo}
+                    </a>
+                  ))}
+                </p>
+              )}
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ============ stack ============ -->
+    <section class="c-secao" id="stack" aria-labelledby="c-t-stack">
+      <h2 id="c-t-stack" class="c-h2"><span class="c-h2__n" aria-hidden="true">3.</span> <span data-rabisco="sublinhado" data-cor="#2b59c3">Stack</span></h2>
+      <p class="c-lead c-anota c-anota--azul">checklist do que eu uso (tudo marcado ✓)</p>
+      <div class="c-stack">
+        {
+          stack.map((g) => (
+            <div class="c-lista">
+              <h3 class="c-lista__titulo">
+                <span data-rabisco="sublinhado" data-cor="#1f7a36">
+                  {g.grupo}
+                </span>
+              </h3>
+              <ul class="c-lista__itens">
+                {g.itens.map((t) => (
+                  <li>
+                    <span class="c-caixinha" aria-hidden="true">
+                      <svg viewBox="0 0 26 26">
+                        <path class="c-check" d={check(nCheck++)} />
+                      </svg>
+                    </span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ============ trajetória ============ -->
+    <section class="c-secao" id="trajetoria" aria-labelledby="c-t-trajetoria">
+      <h2 id="c-t-trajetoria" class="c-h2"><span class="c-h2__n" aria-hidden="true">4.</span> <span data-rabisco="sublinhado" data-cor="#2b59c3">Trajetória</span></h2>
+      <ol class="c-linha" data-rabisco="linha" data-cor="#22304a">
+        {
+          trajetoria.map((t, i) => (
+            <li class="c-etapa">
+              <span class="c-etapa__ponto" aria-hidden="true" />
+              <p class="c-etapa__data">
+                <span data-rabisco="circulo" data-cor="#c0392b">
+                  {t.periodo}
+                </span>
+              </p>
+              <h3 class="c-etapa__cargo">{t.cargo}</h3>
+              <p class="c-etapa__lugar">{t.lugar}</p>
+              {t.itens.length > 0 && (
+                <ul class="c-etapa__itens">
+                  {t.itens.map((it) => (
+                    <li>
+                      {marca(it, destaquesTrajetoria).map((x) =>
+                        x.cor ? <mark class={`c-marca c-marca--${x.cor}`}>{x.t}</mark> : x.t,
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {i < trajetoria.length - 1 && (
+                <span class="c-etapa__seta" data-rabisco="seta" data-dir="baixo" data-cor="#2b59c3" aria-hidden="true" />
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <!-- ============ contato ============ -->
+    <section class="c-secao c-contato" id="contato" aria-labelledby="c-t-contato">
+      <div class="c-picote" aria-hidden="true">
+        <svg class="c-tesoura c-doodle" viewBox="0 0 40 28">
+          <circle cx="7" cy="7" r="5" fill="none" stroke="#22304a" stroke-width="2.4"></circle>
+          <circle cx="7" cy="21" r="5" fill="none" stroke="#22304a" stroke-width="2.4"></circle>
+          <path d="M11 10 38 22M11 18 38 6" fill="none" stroke="#22304a" stroke-width="2.4" stroke-linecap="round"></path>
+        </svg>
+        <span class="c-picote__texto">rasgue aqui</span>
+      </div>
+      <div class="c-bilhete">
+        <h2 id="c-t-contato" class="c-h2"><span class="c-h2__n" aria-hidden="true">5.</span> Contato</h2>
+        <p class="c-bilhete__texto">Me manda um bilhete! {pessoa.status}, e o jeito mais rápido de falar comigo é por e-mail:</p>
+        <p class="c-bilhete__email">
+          <a href={`mailto:${contato.email}`}><span data-rabisco="sublinhado" data-cor="#2b59c3" data-duplo>{contato.email}</span></a>
+        </p>
+        <ul class="c-bilhete__links">
+          <li><a href={contato.linkedin.url} rel="me noopener" target="_blank">LinkedIn: {contato.linkedin.rotulo}<span class="c-sr"> (abre em nova aba)</span></a></li>
+          <li><a href={contato.github.url} rel="me noopener" target="_blank">GitHub: {contato.github.rotulo}<span class="c-sr"> (abre em nova aba)</span></a></li>
+          <li><a href="/conversa">ou puxe papo no chat →</a></li>
+        </ul>
+        <p class="c-bilhete__assinatura c-anota" aria-hidden="true">— Caio</p>
+      </div>
+      <svg class="c-aviao c-doodle" viewBox="0 0 260 160" aria-hidden="true">
+        <defs>
+          <mask id="c-aviao-mascara" maskUnits="userSpaceOnUse" x="-20" y="-20" width="300" height="200">
+            <path class="c-aviao__mascara" d="M8 150c40-10 60-40 40-60s-50 10-20 30 90 10 120-40 50-50 60-56" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round"></path>
+          </mask>
+        </defs>
+        <path class="c-aviao__rastro" d="M8 150c40-10 60-40 40-60s-50 10-20 30 90 10 120-40 50-50 60-56" fill="none" stroke="#2b59c3" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="6 9" mask="url(#c-aviao-mascara)"></path>
+        <g class="c-aviao__corpo">
+          <path d="M200 40l56-34-30 64-12-20-14-10z" fill="#fff" stroke="#22304a" stroke-width="2.6" stroke-linejoin="round"></path>
+          <path d="M214 50l42-44M214 50l-2 22 12-2" fill="none" stroke="#22304a" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></path>
+        </g>
+      </svg>
+    </section>
+  </main>
+
+  <footer class="c-rodape">
+    <p>fim da página · {pessoa.nomeCurto}, 2026</p>
+    <p class="c-rodape__pag" aria-hidden="true">pág. 1</p>
+  </footer>
+</div>
+
+<script>
+  import { iniciar } from './main';
+  iniciar();
+</script>
