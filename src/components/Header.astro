@@ -1,5 +1,6 @@
 ---
 import { navegacao } from '../content/perfil';
+import PaletteSwitcher from './PaletteSwitcher.astro';
 ---
 
 <header class="header">
@@ -20,6 +21,7 @@ import { navegacao } from '../content/perfil';
         }
       </ul>
     </nav>
+    <div class="header__palette"><PaletteSwitcher /></div>
     <a class="btn btn--primary btn--sm header__cta" href="/conversa">Conversar ▸</a>
   </div>
 </header>
@@ -84,9 +86,31 @@ import { navegacao } from '../content/perfil';
     color: var(--accent-text);
   }
 
+  /* Telas médias: linha 1 = marca + âncoras; linha 2 = paleta + CONVERSAR, à direita */
+  @media (max-width: 1080px) and (min-width: 721px) {
+    .header__inner::after {
+      content: '';
+      order: 3;
+      flex-basis: 100%;
+    }
+
+    .header__nav {
+      order: 2;
+    }
+
+    .header__palette {
+      order: 4;
+      margin-left: auto;
+    }
+
+    .header__cta {
+      order: 5;
+    }
+  }
+
   /*
-   * Celular: linha 1 = marca + CONVERSAR; linha 2 = âncoras.
-   * A ordem do DOM (marca, nav, botão) se mantém para teclado e leitor de tela.
+   * Celular: linha 1 = marca + CONVERSAR; linha 2 = âncoras; linha 3 = paleta.
+   * A ordem do DOM (marca, nav, paleta, botão) se mantém para teclado e leitor de tela.
    */
   @media (max-width: 720px) {
     .header__inner {
@@ -103,6 +127,10 @@ import { navegacao } from '../content/perfil';
       order: 3;
       width: 100%;
       margin-left: 0;
+    }
+
+    .header__palette {
+      order: 4;
     }
 
     .header__links {

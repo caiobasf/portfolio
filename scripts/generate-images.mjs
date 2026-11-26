@@ -1,17 +1,24 @@
 /**
  * Gera public/og-image.png (1200×630) e public/apple-touch-icon.png (180×180)
- * a partir de HTML, usando os tokens de src/styles/tokens.css e as fontes locais.
+ * a partir de HTML, usando as paletas (src/styles/palettes.ts), os tokens de
+ * src/styles/tokens.css e as fontes locais.
  *
  * Uso: npm run images
- * Requer Chrome ou Edge instalado (ou CHROME_PATH apontando para o executável).
+ * Requer Node com suporte a TypeScript nativo (≥ 22.18) e Chrome ou Edge
+ * instalado (ou CHROME_PATH apontando para o executável).
  */
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { paletteCss } from '../src/styles/palettes.ts';
+
+/** Paletas usadas nas imagens: prévia no visual claro, ícone no escuro. */
+const PALETA_OG = 'scanner';
+const PALETA = 'escuro';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const tokens = readFileSync(path.join(root, 'src/styles/tokens.css'), 'utf8');
+const tokens = paletteCss() + '\n' + readFileSync(path.join(root, 'src/styles/tokens.css'), 'utf8');
 // fontes embutidas em base64: páginas criadas com setContent não carregam file://
 const font = (p) =>
   `data:font/woff2;base64,${readFileSync(path.join(root, 'node_modules', p)).toString('base64')}`;
@@ -37,36 +44,43 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-mono);
 .accent-text { color: var(--accent-text); }
 `;
 
-const og = `<!doctype html><html><head><meta charset="utf-8"><style>${base}
+/** Alvo de registro: quadrado com contorno e dois quadradinhos opostos. */
+const alvo = (x, y) =>
+  `<g transform="translate(${x},${y})"><rect x="0.5" y="0.5" width="17" height="17" fill="none" style="stroke:var(--text)"/>` +
+  `<rect x="1" y="1" width="8" height="8" style="fill:var(--text)"/><rect x="9" y="9" width="8" height="8" style="fill:var(--text)"/></g>`;
+const alvos = [0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => alvo(c * 96, r * 66))).join('');
+
+const og = `<!doctype html><html data-palette="${PALETA_OG}"><head><meta charset="utf-8"><style>${base}
 body {
   position: relative;
   background-image:
-    radial-gradient(ellipse 60% 70% at 88% 8%, var(--glow-wine), transparent 70%),
-    radial-gradient(ellipse 70% 80% at 8% 100%, var(--glow-teal), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 92% 0%, var(--glow-a), transparent 70%),
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: auto, auto, 48px 48px, 48px 48px;
+  background-size: auto, 48px 48px, 48px 48px;
 }
 .scan { position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg, var(--scanline) 0 1px, transparent 1px 4px); }
-.frame { position: absolute; inset: 40px; border: 1px solid var(--line); padding: 56px 64px; display: flex; flex-direction: column; justify-content: space-between; }
-.frame::before, .frame::after { content: ''; position: absolute; width: 36px; height: 36px; }
-.frame::before { top: -1px; left: -1px; border-top: 3px solid var(--accent); border-left: 3px solid var(--accent); }
-.frame::after { right: -1px; bottom: -1px; border-right: 3px solid var(--accent); border-bottom: 3px solid var(--accent); }
-.top { display: flex; justify-content: space-between; font-size: 22px; letter-spacing: 0.16em; font-weight: 500; }
-.status { color: var(--text-3); font-size: 18px; letter-spacing: 0.2em; display: flex; align-items: center; gap: 14px; }
-.status i { width: 12px; height: 12px; background: var(--accent); display: inline-block; }
-h1 { font-family: var(--font-display); font-weight: 700; font-size: 150px; line-height: 0.9; text-transform: uppercase; letter-spacing: -0.01em; }
-h1 span { color: var(--accent); }
-.nick { font-size: 40px; font-weight: 500; margin-top: 14px; }
-.role { font-size: 24px; letter-spacing: 0.1em; }
+.main { position: absolute; left: 72px; right: 72px; top: 64px; bottom: 150px; display: flex; flex-direction: column; justify-content: space-between; }
+.top { display: flex; align-items: center; gap: 14px; font-size: 20px; letter-spacing: 0.2em; color: var(--text-3); }
+.top i { width: 12px; height: 12px; background: var(--accent); display: inline-block; }
+h1 { font-weight: 500; font-size: 168px; line-height: 1; letter-spacing: -0.01em; color: var(--text); }
+.role { font-size: 26px; letter-spacing: 0.1em; color: var(--text); }
+.marks { position: absolute; right: 72px; top: 64px; display: flex; flex-direction: column; align-items: flex-end; gap: 18px; }
+.marks p { font-size: 14px; line-height: 1.7; letter-spacing: 0.16em; color: var(--text-3); text-align: right; }
+.band { position: absolute; left: 0; right: 0; bottom: 0; height: 110px; background: var(--band-bg);
+  background-image: repeating-linear-gradient(0deg, var(--band-line) 0 1px, transparent 1px 6px); }
+.band span { position: absolute; font-size: 14px; letter-spacing: 0.18em; color: var(--band-fg); background: var(--band-bg); padding: 2px 8px; }
 </style></head><body><div class="scan"></div>
-<div class="frame">
-  <div class="top"><span>CF<span class="accent-text">//</span>PORTFÓLIO</span><span class="status"><i></i>// ABERTO A OPORTUNIDADES</span></div>
-  <div><h1>Caio <span>Ferreira</span></h1><p class="nick">caiobasf</p></div>
+<div class="marks"><svg width="210" height="150" viewBox="0 0 210 150">${alvos}</svg><p>ESCANEANDO: PERFIL_01<br>FREQ: 7.3 MHz<br>KEY-1</p></div>
+<div class="main">
+  <p class="top"><i></i>// ABERTO A OPORTUNIDADES</p>
+  <div><h1>CAIOBASF</h1></div>
   <p class="role">DESENVOLVEDOR FULL STACK <span class="accent-text">//</span> SÃO PAULO, SP</p>
-</div></body></html>`;
+</div>
+<div class="band"><span style="left:64px;top:14px">SCAN · PERFIL · 7.3 MHz</span><span style="right:64px;bottom:14px">KEY-1</span></div>
+</body></html>`;
 
-const icon = `<!doctype html><html><head><meta charset="utf-8"><style>${base}
+const icon = `<!doctype html><html data-palette="${PALETA}"><head><meta charset="utf-8"><style>${base}
 body { display: grid; place-items: center; background: var(--bg); }
 .m { width: 180px; height: 180px; display: grid; place-items: center; position: relative;
   font-family: var(--font-display); font-weight: 700; font-size: 104px; letter-spacing: -2px; padding-top: 8px; }

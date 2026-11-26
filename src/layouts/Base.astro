@@ -1,7 +1,15 @@
 ---
 import '../styles/global.css';
 import Fonts from '../components/Fonts.astro';
-import { seo } from '../content/perfil';
+import { seo, pessoa, pessoaJsonLd } from '../content/perfil';
+import {
+  PALETTE_IDS,
+  DEFAULT_PALETTE,
+  DEFAULT_DARK_PALETTE,
+  PALETTE_STORAGE_KEY,
+  paletteCss,
+  themeColors,
+} from '../styles/palettes';
 
 interface Props {
   title?: string;
@@ -10,13 +18,26 @@ interface Props {
   noindex?: boolean;
   /** Liga o overlay de boot (só a landing) */
   boot?: boolean;
+  /** Inclui os dados estruturados Person (só a landing) */
+  person?: boolean;
 }
 
-const { title = seo.titulo, description = seo.descricao, noindex = false, boot = false } = Astro.props;
+const { title = seo.titulo, description = seo.descricao, noindex = false, boot = false, person = false } = Astro.props;
 
 const site = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(Astro.url.pathname, site).href;
 const ogImage = new URL('/og-image.png', site).href;
+
+const temas = themeColors();
+/*
+ * Aplica a paleta antes da primeira pintura (sem piscar a errada): escolha
+ * salva > sistema escuro > padrão. Também acerta o theme-color do navegador.
+ */
+const paletteBoot = `(function(){var d=document.documentElement,ids=${JSON.stringify(PALETTE_IDS)},id=null;
+try{id=localStorage.getItem(${JSON.stringify(PALETTE_STORAGE_KEY)})}catch(e){}
+if(ids.indexOf(id)<0){id=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?${JSON.stringify(DEFAULT_DARK_PALETTE)}:${JSON.stringify(DEFAULT_PALETTE)}}
+d.setAttribute('data-palette',id);
+var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',${JSON.stringify(temas)}[id]);})();`;
 ---
 
 <!doctype html>
@@ -24,6 +45,10 @@ const ogImage = new URL('/og-image.png', site).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content={temas[DEFAULT_PALETTE]} />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline set:html={paletteBoot} />
+    <style is:inline set:html={paletteCss()} />
     {
       boot && (
         /*
@@ -51,28 +76,29 @@ const ogImage = new URL('/og-image.png', site).href;
     <title>{title}</title>
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
-    <!-- meta não lê variável CSS: manter igual a --bg em tokens.css -->
-    <meta name="theme-color" content="#010204" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="author" content="Caio Ferreira" />
+    <meta name="author" content={pessoa.nomeCompleto} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
-    <meta property="og:site_name" content="Caio Ferreira" />
+    <meta property="og:site_name" content={seo.siteName} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Caio Ferreira — Desenvolvedor Full Stack, em estilo de terminal escuro com detalhes vermelhos." />
+    <meta
+      property="og:image:alt"
+      content={`CAIOBASF — ${pessoa.cargo}, ${pessoa.local}: fundo claro com grade técnica, marcas de calibração e detalhes vermelhos.`}
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
+    {person && <script type="application/ld+json" set:html={JSON.stringify(pessoaJsonLd(canonical))} />}
   </head>
   <body>
     <slot />

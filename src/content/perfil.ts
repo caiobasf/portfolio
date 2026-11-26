@@ -7,8 +7,10 @@
 
 export const pessoa = {
   nome: 'Caio',
-  sobrenome: 'Ferreira',
-  nomeCompleto: 'Caio Ferreira',
+  /** forma curta: conversa, rodapé, boot */
+  nomeCurto: 'Caio Ferreira',
+  /** forma completa: título do hero (hover), <title> e dados estruturados */
+  nomeCompleto: 'Caio Bruno Alves Santana Ferreira',
   apelido: 'caiobasf',
   cargo: 'Desenvolvedor Full Stack',
   local: 'São Paulo, SP',
@@ -158,7 +160,28 @@ export const navegacao = [
 ] as const;
 
 export const seo = {
-  titulo: 'Caio Ferreira — Desenvolvedor Full Stack',
+  titulo: `${pessoa.nomeCompleto} (${pessoa.apelido}) — ${pessoa.cargo}`,
   descricao:
-    'Portfólio do Caio Ferreira, desenvolvedor full stack de São Paulo: projetos, stack, trajetória e contato.',
+    'Desenvolvedor full stack em São Paulo que constrói plataformas, integrações e automações com TypeScript, React, Next.js, Node.js, Python e PostgreSQL.',
+  siteName: `${pessoa.nomeCurto} (${pessoa.apelido})`,
 } as const;
+
+/**
+ * Dados estruturados (schema.org Person) da landing.
+ * PRIVACIDADE: sem e-mail e sem telefone.
+ */
+export const pessoaJsonLd = (url: string) => ({
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: pessoa.nomeCompleto,
+  alternateName: [pessoa.apelido, pessoa.nomeCurto],
+  jobTitle: pessoa.cargo,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'São Paulo',
+    addressRegion: 'SP',
+    addressCountry: 'BR',
+  },
+  sameAs: [contato.linkedin.url, contato.github.url],
+  url,
+});

@@ -10,7 +10,8 @@ import { projetos } from '../content/perfil';
     <ul class="projetos" role="list">
       {
         projetos.map((p) => (
-          <li class="card card--interactive">
+          <li class="scan" data-mosaic>
+            <div class="card card--interactive">
             <article class="card__inner projeto" aria-labelledby={`proj-${p.id}`}>
               <p class="label projeto__meta">
                 {p.codigo} · {p.meta.join(' · ')}
@@ -38,6 +39,8 @@ import { projetos } from '../content/perfil';
                 </div>
               )}
             </article>
+            </div>
+            <span class="sb" data-label={`ALVO · ${p.codigo}`} aria-hidden="true" />
           </li>
         ))
       }

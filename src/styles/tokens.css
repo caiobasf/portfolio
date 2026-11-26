@@ -1,44 +1,18 @@
 /*
- * Design tokens — única fonte de cores, fontes e medidas.
- * Nenhum componente escreve cor direto: tudo passa por estas variáveis.
- * Contrastes (WCAG) conferidos com estes valores; reconferir se algo mudar:
- *   --accent-text / --bg ≈ 5,3:1 · --accent-text / --surface ≈ 4,65:1
- *   --text-3 / --bg ≈ 7:1 · --on-accent / --accent ≈ 5,8:1
- *   --accent (borda) / --bg ≈ 3,3:1 · --line-control / --bg ≈ 4:1
+ * Design tokens — fontes, medidas e cores DERIVADAS.
+ *
+ * As cores-base vêm da paleta ativa (src/styles/palettes.ts, aplicada em
+ * <html data-palette="…">). Aqui só se misturam essas cores; nenhum
+ * componente escreve cor direto.
  */
 :root {
-  color-scheme: dark;
-
-  /* Fundos */
-  --bg: #010204;             /* página (Absolute Black) */
-  --bg-alt: #0A0D0F;         /* faixas alternadas (Shadow Black) */
-  --bg-header: rgba(1, 2, 4, 0.94);
-  --surface: #05181E;        /* cards (Deep Teal) */
-  --surface-raised: #08232B; /* elevado/hover (Midnight Teal) */
-
-  /* Linhas */
-  --line: #1A2B32;           /* divisores (Steel Blue) */
-  --line-strong: #30434B;    /* contornos decorativos (Storm Gray) — 2:1, não usar sozinho em controle */
-  --line-control: #5F7078;   /* contorno de botões e campos: ≥ 3:1 sobre --bg e --surface */
-
-  /* Texto */
-  --text: #C5CDD1;           /* principal */
-  --text-2: #A8B3B8;         /* secundário */
-  --text-3: #8B999F;         /* legendas, metadados */
-  --on-accent: #F1F4F5;      /* texto sobre fundo vermelho */
-
-  /* Vermelhos */
-  --accent: #C0091A;         /* fundos, bordas, barras, títulos grandes */
-  --accent-deep: #B30814;    /* hover de card (Red Fabric) */
-  --accent-dark: #8B0D16;    /* brilhos e pixels (Crimson Depth) */
-  --accent-text: #E5484F;    /* único vermelho permitido em texto pequeno */
-
-  /* Efeitos */
-  --pixel-noise: #5F7078;
-  --grid: rgba(197, 205, 209, 0.045);
-  --scanline: rgba(0, 0, 0, 0.16);
-  --glow-teal: rgba(8, 35, 43, 0.9);
-  --glow-wine: rgba(139, 13, 22, 0.22);
+  /*
+   * Efeitos derivados da paleta (recalculados a cada troca).
+   * Fundos que recebem texto (--bg-alt, --surface-raised) ficam em palettes.ts,
+   * cobertos pelo teste de contraste.
+   */
+  --bg-header: color-mix(in srgb, var(--bg) 94%, transparent); /* header translúcido */
+  --grid: color-mix(in srgb, var(--text) 5%, transparent);     /* grade de 48px */
 
   /* Tipografia */
   --font-display: 'Rajdhani', 'Arial Narrow', sans-serif;

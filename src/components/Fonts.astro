@@ -2,8 +2,8 @@
 /**
  * Fontes auto-hospedadas, só o subconjunto latino (cobre português: á, ã, ç, ê…).
  * Declaradas à mão para não gerar arquivos de cirílico/grego/vietnamita no build.
- * Rajdhani 700 (título do hero) e JetBrains Mono (subtítulo/rótulos) são
- * pré-carregadas porque aparecem no topo da página.
+ * JetBrains Mono (título CAIOBASF, subtítulo, rótulos) é pré-carregada porque
+ * aparece no topo da página.
  */
 import rajdhani500 from '@fontsource/rajdhani/files/rajdhani-latin-500-normal.woff2?url';
 import rajdhani600 from '@fontsource/rajdhani/files/rajdhani-latin-600-normal.woff2?url';
@@ -36,7 +36,6 @@ const { preload = true } = Astro.props;
 {
   preload && (
     <>
-      <link rel="preload" href={rajdhani700} as="font" type="font/woff2" crossorigin />
       <link rel="preload" href={mono} as="font" type="font/woff2" crossorigin />
     </>
   )

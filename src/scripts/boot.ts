@@ -46,6 +46,8 @@ export function initBoot(overlay: HTMLElement): void {
   let closed = false;
 
   const setProgress = (shown: number) => {
+    // lido pelas listras do fundo: começam agitadas e se acalmam até o fim
+    overlay.dataset.progress = String(shown / lines.length);
     const value = Math.round((shown / lines.length) * 100);
     if (bar) bar.style.transform = `scaleX(${value / 100})`;
     if (pct) pct.textContent = `${value}%`;

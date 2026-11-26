@@ -10,7 +10,7 @@ import { trajetoria, contato } from '../content/perfil';
     <ol class="timeline" role="list">
       {
         trajetoria.map((etapa) => (
-          <li class="timeline__item">
+          <li class="timeline__item" data-mosaic>
             <span class="timeline__marker" aria-hidden="true" />
             <p class="label timeline__periodo">{etapa.periodo}</p>
             <h3 class="timeline__cargo">{etapa.cargo}</h3>

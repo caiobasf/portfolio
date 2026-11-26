@@ -10,13 +10,16 @@ import { stack } from '../content/perfil';
     <div class="stack">
       {
         stack.map((g) => (
-          <div class="stack__grupo">
-            <h3 class="label stack__titulo">{g.grupo}</h3>
-            <ul class="chips" role="list">
-              {g.itens.map((item) => (
-                <li class="chip">{item}</li>
-              ))}
-            </ul>
+          <div class="scan" data-mosaic>
+            <div class="stack__grupo">
+              <h3 class="label stack__titulo">{g.grupo}</h3>
+              <ul class="chips" role="list">
+                {g.itens.map((item) => (
+                  <li class="chip">{item}</li>
+                ))}
+              </ul>
+            </div>
+            <span class="sb" data-label={`GRUPO · ${g.grupo.toUpperCase()}`} aria-hidden="true" />
           </div>
         ))
       }

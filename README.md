@@ -13,6 +13,9 @@ Requer Node ≥ 22.23.4.
 | `npm run build`   | Gera o site estático em `dist/`                                  |
 | `npm run preview` | Serve o `dist/` localmente                                       |
 | `npm run check`   | Verificação de tipos (`astro check`)                             |
+| `npm run test:unit` | Teste de contraste das paletas (falha se alguma cor cair do mínimo WCAG) |
+| `npm run test:e2e` | Testes de navegador (Playwright + axe, Chrome do sistema): título do hero, paletas, efeitos, sem JS, capturas em `test-results/telas/` |
+| `npm test`        | Os dois acima                                                    |
 | `npm run images`  | Regera `public/og-image.png` e `public/apple-touch-icon.png` (precisa de Chrome ou Edge) |
 
 Para rever o boot de novo na mesma aba: `sessionStorage.removeItem('cf-boot')` no console e recarregar.
@@ -20,7 +23,9 @@ Para rever o boot de novo na mesma aba: `sessionStorage.removeItem('cf-boot')` n
 ## Onde mexer
 
 - **Texto do currículo:** `src/content/perfil.ts`, fonte única lida pela landing e pelo chat.
-- **Cores, fontes e medidas:** `src/styles/tokens.css`. Nenhum componente escreve cor direto.
+- **Cores:** `src/styles/palettes.ts`, as quatro paletas (scanner, escuro, vermelho, mono). Depois de mexer, rode `npm run test:unit`. Nenhum componente escreve cor direto.
+- **Fontes, medidas e efeitos derivados da paleta:** `src/styles/tokens.css`.
+- **Troca de paleta no navegador:** `src/scripts/palette.ts` (`getPalette()` para canvases, evento `palette-change`) e o seletor `src/components/PaletteSwitcher.astro`. Para testar à mão: `document.documentElement.dataset.palette = 'mono'` no console; para limpar a escolha: `localStorage.removeItem('cf-palette')`.
 - **Respostas e palavras-chave do chat:** `src/scripts/chat-data.ts`.
 - **Animações de pixel:** `src/scripts/pixel-text.ts` (subtítulo e apelido).
 - **Boot:** `src/components/Boot.astro` + `src/scripts/boot.ts`. O script inline em `src/layouts/Base.astro` decide se ele aparece.
