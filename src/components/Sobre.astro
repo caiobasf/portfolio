@@ -1,0 +1,99 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import SectionHead from './SectionHead.astro';
+import { sobre, curriculoPdf } from '../content/perfil';
+
+// O botão só aparece se o PDF (versão sem telefone) estiver em public/.
+const temPdf = fs.existsSync(path.join(process.cwd(), 'public', curriculoPdf));
+---
+
+<section id="sobre" class="section" aria-labelledby="sobre-titulo">
+  <div class="container sobre">
+    <div class="sobre__texto">
+      <SectionHead id="sobre-titulo" numero="01" rotulo="Sobre" titulo="Quem sou" />
+      <p class="sobre__p">{sobre.paragrafo}</p>
+      {
+        temPdf && (
+          <div>
+            <a class="btn btn--outline" href={curriculoPdf} download>
+              Baixar currículo (PDF)
+            </a>
+          </div>
+        )
+      }
+    </div>
+
+    <div class="card sobre__card">
+      <dl class="card__inner sobre__lista">
+        {
+          sobre.resumo.map((item) => (
+            <div class="sobre__item">
+              <dt class="label">{item.rotulo}</dt>
+              <dd>
+                {item.linhas.map((l) => (
+                  <span class="sobre__linha">{l}</span>
+                ))}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </div>
+</section>
+
+<style>
+  .sobre {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: end;
+  }
+
+  .sobre__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .sobre__texto :global(.section-head) {
+    margin-bottom: 0;
+  }
+
+  .sobre__p {
+    max-width: 62ch;
+    font-size: var(--fs-lead);
+    line-height: 1.65;
+    color: var(--text-2);
+    text-wrap: pretty;
+  }
+
+  .sobre__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    margin: 0;
+  }
+
+  .sobre__item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .sobre__item dd {
+    margin: 0;
+  }
+
+  .sobre__linha {
+    display: block;
+    color: var(--text);
+  }
+
+  @media (max-width: 860px) {
+    .sobre {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

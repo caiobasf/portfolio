@@ -1,0 +1,68 @@
+/*
+ * Design tokens — única fonte de cores, fontes e medidas.
+ * Nenhum componente escreve cor direto: tudo passa por estas variáveis.
+ * Contrastes (WCAG) conferidos com estes valores; reconferir se algo mudar:
+ *   --accent-text / --bg ≈ 5,3:1 · --accent-text / --surface ≈ 4,65:1
+ *   --text-3 / --bg ≈ 7:1 · --on-accent / --accent ≈ 5,8:1
+ *   --accent (borda) / --bg ≈ 3,3:1 · --line-control / --bg ≈ 4:1
+ */
+:root {
+  color-scheme: dark;
+
+  /* Fundos */
+  --bg: #010204;             /* página (Absolute Black) */
+  --bg-alt: #0A0D0F;         /* faixas alternadas (Shadow Black) */
+  --bg-header: rgba(1, 2, 4, 0.94);
+  --surface: #05181E;        /* cards (Deep Teal) */
+  --surface-raised: #08232B; /* elevado/hover (Midnight Teal) */
+
+  /* Linhas */
+  --line: #1A2B32;           /* divisores (Steel Blue) */
+  --line-strong: #30434B;    /* contornos decorativos (Storm Gray) — 2:1, não usar sozinho em controle */
+  --line-control: #5F7078;   /* contorno de botões e campos: ≥ 3:1 sobre --bg e --surface */
+
+  /* Texto */
+  --text: #C5CDD1;           /* principal */
+  --text-2: #A8B3B8;         /* secundário */
+  --text-3: #8B999F;         /* legendas, metadados */
+  --on-accent: #F1F4F5;      /* texto sobre fundo vermelho */
+
+  /* Vermelhos */
+  --accent: #C0091A;         /* fundos, bordas, barras, títulos grandes */
+  --accent-deep: #B30814;    /* hover de card (Red Fabric) */
+  --accent-dark: #8B0D16;    /* brilhos e pixels (Crimson Depth) */
+  --accent-text: #E5484F;    /* único vermelho permitido em texto pequeno */
+
+  /* Efeitos */
+  --pixel-noise: #5F7078;
+  --grid: rgba(197, 205, 209, 0.045);
+  --scanline: rgba(0, 0, 0, 0.16);
+  --glow-teal: rgba(8, 35, 43, 0.9);
+  --glow-wine: rgba(139, 13, 22, 0.22);
+
+  /* Tipografia */
+  --font-display: 'Rajdhani', 'Arial Narrow', sans-serif;
+  --font-body: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+  --fs-label: 12px;
+  --fs-small: 14px;
+  --fs-body: 16px;
+  --fs-lead: 18px;
+  --fs-h2: clamp(30px, 4vw, 48px);
+  --fs-h1: clamp(48px, 8vw, 120px);
+  --tracking-label: 0.2em;
+  --tracking-ui: 0.14em;
+
+  /* Layout */
+  --container: 1200px;
+  --gutter: clamp(16px, 4vw, 32px);
+  --section-pad: clamp(64px, 9vw, 88px);
+  --grid-size: 48px;
+  --chamfer: 12px;
+  --chamfer-card: 20px;
+  --touch: 44px;
+  --touch-lg: 48px;
+  --focus-ring: 2px solid var(--accent-text);
+  --focus-offset: 3px;
+}

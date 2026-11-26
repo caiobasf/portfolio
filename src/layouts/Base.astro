@@ -1,0 +1,80 @@
+---
+import '../styles/global.css';
+import Fonts from '../components/Fonts.astro';
+import { seo } from '../content/perfil';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Páginas como /404 não devem ser indexadas */
+  noindex?: boolean;
+  /** Liga o overlay de boot (só a landing) */
+  boot?: boolean;
+}
+
+const { title = seo.titulo, description = seo.descricao, noindex = false, boot = false } = Astro.props;
+
+const site = Astro.site ?? new URL(Astro.url.origin);
+const canonical = new URL(Astro.url.pathname, site).href;
+const ogImage = new URL('/og-image.png', site).href;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    {
+      boot && (
+        /*
+         * Decide antes da primeira pintura se o boot aparece: uma vez por
+         * sessão e nunca com movimento reduzido. Trava de segurança: se o
+         * script do boot não carregar, o overlay some sozinho em 8s.
+         */
+        <script is:inline>
+          (function () {
+            try {
+              if (sessionStorage.getItem('cf-boot')) return;
+              sessionStorage.setItem('cf-boot', '1');
+              if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+              var d = document.documentElement;
+              d.classList.add('boot-on');
+              setTimeout(function () {
+                d.classList.remove('boot-on');
+              }, 8000);
+            } catch (e) {}
+          })();
+        </script>
+      )
+    }
+    <Fonts />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <!-- meta não lê variável CSS: manter igual a --bg em tokens.css -->
+    <meta name="theme-color" content="#010204" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="author" content="Caio Ferreira" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="Caio Ferreira" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Caio Ferreira — Desenvolvedor Full Stack, em estilo de terminal escuro com detalhes vermelhos." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

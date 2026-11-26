@@ -1,0 +1,97 @@
+---
+import SectionHead from './SectionHead.astro';
+import { projetos } from '../content/perfil';
+---
+
+<section id="projetos" class="section section--alt" aria-labelledby="projetos-titulo">
+  <div class="container">
+    <SectionHead id="projetos-titulo" numero="02" rotulo="Projetos" titulo="Projetos em destaque" />
+
+    <ul class="projetos" role="list">
+      {
+        projetos.map((p) => (
+          <li class="card card--interactive">
+            <article class="card__inner projeto" aria-labelledby={`proj-${p.id}`}>
+              <p class="label projeto__meta">
+                {p.codigo} · {p.meta.join(' · ')}
+              </p>
+              <h3 id={`proj-${p.id}`} class="projeto__nome">
+                {p.nome}
+              </h3>
+              <ul class="bullets">
+                {p.itens.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+              <ul class="tags" aria-label="Tecnologias">
+                {p.tags.map((t) => (
+                  <li class="tag">{t}</li>
+                ))}
+              </ul>
+              {p.links.length > 0 && (
+                <div class="projeto__links">
+                  {p.links.map((l) => (
+                    <a class="btn btn--outline btn--sm" href={l.url} target="_blank" rel="noopener noreferrer">
+                      {l.rotulo} ↗
+                    </a>
+                  ))}
+                </div>
+              )}
+            </article>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .projetos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+    gap: 24px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .projeto {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .projeto__nome {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(28px, 3vw, 36px);
+    line-height: 1.05;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+    padding: 6px 0 0;
+    list-style: none;
+  }
+
+  .tag {
+    padding: 4px 10px;
+    border: 1px solid var(--line-strong);
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.04em;
+    color: var(--text-2);
+  }
+
+  .projeto__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+</style>

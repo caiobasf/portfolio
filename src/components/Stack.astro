@@ -1,0 +1,58 @@
+---
+import SectionHead from './SectionHead.astro';
+import { stack } from '../content/perfil';
+---
+
+<section id="stack" class="section" aria-labelledby="stack-titulo">
+  <div class="container">
+    <SectionHead id="stack-titulo" numero="03" rotulo="Stack" titulo="Com o que eu trabalho" />
+
+    <div class="stack">
+      {
+        stack.map((g) => (
+          <div class="stack__grupo">
+            <h3 class="label stack__titulo">{g.grupo}</h3>
+            <ul class="chips" role="list">
+              {g.itens.map((item) => (
+                <li class="chip">{item}</li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .stack {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 36px 40px;
+  }
+
+  .stack__grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .chip {
+    padding: 8px 12px;
+    border: 1px solid var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+</style>

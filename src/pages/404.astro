@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="404 — Caio Ferreira" description="Página não encontrada." noindex>
+  <main class="nf bg-grid" id="conteudo">
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="nf__box corners">
+      <p class="label">// Erro 404</p>
+      <h1 class="h2">Rota não encontrada</h1>
+      <p class="nf__sys">&gt; o endereço pedido não existe neste sistema.</p>
+      <div class="nf__actions">
+        <a class="btn btn--primary" href="/">Voltar ao portfólio ▸</a>
+        <a class="btn btn--outline" href="/conversa">Conversar</a>
+      </div>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .nf {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100dvh;
+    padding: var(--gutter);
+  }
+
+  .nf__box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 560px;
+    padding: clamp(24px, 5vw, 40px);
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+  }
+
+  .nf__sys {
+    font-family: var(--font-mono);
+    font-size: var(--fs-small);
+    color: var(--text-2);
+  }
+
+  .nf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+</style>

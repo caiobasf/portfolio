@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import Sobre from '../components/Sobre.astro';
+import Projetos from '../components/Projetos.astro';
+import Stack from '../components/Stack.astro';
+import Trajetoria from '../components/Trajetoria.astro';
+import Contato from '../components/Contato.astro';
+import Footer from '../components/Footer.astro';
+import Boot from '../components/Boot.astro';
+---
+
+<Base boot>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <Header />
+  <main id="conteudo" tabindex="-1">
+    <Hero />
+    <Sobre />
+    <Projetos />
+    <Stack />
+    <Trajetoria />
+    <Contato />
+  </main>
+  <Footer />
+  <Boot />
+</Base>

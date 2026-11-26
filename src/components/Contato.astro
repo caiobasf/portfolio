@@ -1,0 +1,217 @@
+---
+import SectionHead from './SectionHead.astro';
+import { contato } from '../content/perfil';
+
+const canais = [
+  { rotulo: 'E-mail', href: `mailto:${contato.email}`, texto: contato.email, externo: false },
+  { rotulo: 'LinkedIn', href: contato.linkedin.url, texto: contato.linkedin.rotulo, externo: true },
+  { rotulo: 'GitHub', href: contato.github.url, texto: contato.github.rotulo, externo: true },
+];
+---
+
+<section id="contato" class="section" aria-labelledby="contato-titulo">
+  <div class="container contato">
+    <div class="contato__info">
+      <SectionHead id="contato-titulo" numero="05" rotulo="Contato" titulo="Aberto a novas oportunidades" />
+
+      <dl class="canais">
+        {
+          canais.map((c) => (
+            <div class="canal">
+              <dt class="label label--muted">{c.rotulo}</dt>
+              <dd>
+                <a
+                  class="canal__link"
+                  href={c.href}
+                  {...(c.externo ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                >
+                  {c.texto}
+                  {c.externo && <span class="sr-only"> (abre em nova aba)</span>}
+                </a>
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+
+      <div>
+        <a class="btn btn--primary" href="/conversa">Prefiro conversar ▸</a>
+      </div>
+    </div>
+
+    <div class="card contato__card">
+      <!--
+        Sem backend: o formulário abre o aplicativo de e-mail do visitante (mailto:).
+        Com JavaScript, o assunto e o corpo saem formatados; sem JavaScript, o
+        navegador usa o envio nativo em texto puro.
+      -->
+      <form
+        class="card__inner form"
+        action={`mailto:${contato.email}`}
+        method="post"
+        enctype="text/plain"
+        data-mailto={contato.email}
+      >
+        <p class="label">// Mensagem direta</p>
+
+        <div class="field">
+          <label class="field__label" for="f-nome">Nome</label>
+          <input class="field__input" id="f-nome" name="nome" type="text" autocomplete="name" required />
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="f-email">E-mail</label>
+          <input class="field__input" id="f-email" name="email" type="email" autocomplete="email" required />
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="f-msg">Mensagem</label>
+          <textarea class="field__input field__textarea" id="f-msg" name="mensagem" rows="5" required></textarea>
+        </div>
+
+        <button class="btn btn--primary form__enviar" type="submit">Enviar mensagem</button>
+        <p class="form__nota" id="f-nota">O botão abre o seu aplicativo de e-mail com a mensagem pronta para enviar.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('form[data-mailto]');
+  form?.addEventListener('submit', (e) => {
+    if (!form.checkValidity()) return;
+    e.preventDefault();
+    const data = new FormData(form);
+    const nome = String(data.get('nome') ?? '').trim();
+    const email = String(data.get('email') ?? '').trim();
+    const mensagem = String(data.get('mensagem') ?? '').trim();
+    const assunto = `Contato pelo portfólio — ${nome}`;
+    const corpo = `${mensagem}\n\n—\n${nome}\n${email}`;
+    window.location.href = `mailto:${form.dataset.mailto}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+  });
+</script>
+
+<style>
+  .contato {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 56px;
+    align-items: start;
+  }
+
+  .contato__info {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .contato__info :global(.section-head) {
+    margin-bottom: 0;
+  }
+
+  .canais {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .canal {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .canal dd {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .canal__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-lg);
+    overflow-wrap: anywhere;
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .canal__link:hover {
+    color: var(--accent-text);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+
+  .field__input {
+    width: 100%;
+    min-height: var(--touch);
+    padding: 10px 14px;
+    border: 1px solid var(--line-control);
+    border-radius: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-size: var(--fs-body);
+  }
+
+  .field__input:hover {
+    border-color: var(--text-3);
+  }
+
+  .field__input:focus-visible {
+    border-color: var(--accent-text);
+  }
+
+  .field__textarea {
+    min-height: 140px;
+    resize: vertical;
+  }
+
+  .form__enviar {
+    align-self: flex-start;
+  }
+
+  .form__nota {
+    font-size: var(--fs-small);
+    color: var(--text-3);
+  }
+
+  @media (max-width: 860px) {
+    .contato {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .canal {
+      grid-template-columns: 1fr;
+      padding-top: 12px;
+    }
+
+    .canal__link {
+      min-height: var(--touch);
+    }
+  }
+</style>

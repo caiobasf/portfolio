@@ -1,0 +1,332 @@
+---
+import Base from '../layouts/Base.astro';
+import { chips, mensagensIniciais } from '../scripts/chat-data';
+import { contato } from '../content/perfil';
+---
+
+<Base title="Conversa — Caio Ferreira" description="Converse com o Caio Ferreira: projetos, stack, experiência e contato.">
+  <div class="chat bg-grid" data-chat>
+    <div class="chat__window corners">
+      <header class="chat__bar">
+        <a class="chat__back" href="/">← Voltar ao portfólio</a>
+        <p class="chat__brand">
+          <span class="chat__dot" aria-hidden="true"></span>
+          <span>CF<span class="accent-text">//</span>CONVERSA</span>
+        </p>
+      </header>
+
+      <main class="chat__main" id="conteudo" tabindex="-1">
+        <h1 class="sr-only">Conversa com o Caio</h1>
+
+        <div class="chat__scroll" data-chat-scroll>
+          <div class="chat__log" role="log" aria-live="polite" aria-label="Mensagens" data-chat-log>
+            <div class="msg msg--sys">&gt; {mensagensIniciais.sys}</div>
+            <div class="msg msg--caio">
+              <span class="msg__who">Caio</span>
+              <div class="msg__bubble"><p>{mensagensIniciais.caio}</p></div>
+            </div>
+          </div>
+          <p class="msg msg--sys chat__typing" aria-hidden="true" data-chat-typing hidden>&gt; caio está digitando...</p>
+
+          <noscript>
+            <div class="msg msg--caio chat__noscript">
+              <span class="msg__who">Caio</span>
+              <div class="msg__bubble">
+                <p>Esta conversa precisa de JavaScript. Enquanto isso, me chama por:</p>
+                <ul class="msg__list">
+                  <li>e-mail: <a class="msg__link" href={`mailto:${contato.email}`}>{contato.email}</a></li>
+                  <li>LinkedIn: <a class="msg__link" href={contato.linkedin.url}>{contato.linkedin.rotulo}</a></li>
+                  <li>GitHub: <a class="msg__link" href={contato.github.url}>{contato.github.rotulo}</a></li>
+                </ul>
+              </div>
+            </div>
+          </noscript>
+        </div>
+
+        <div class="chat__controls">
+          <div class="chat__chips" role="group" aria-label="Perguntas prontas">
+            {
+              chips.map(([topico, rotulo]) => (
+                <button type="button" class="chat__chip" data-chat-chip={topico}>
+                  {rotulo}
+                </button>
+              ))
+            }
+          </div>
+
+          <form class="chat__form" data-chat-form>
+            <label class="sr-only" for="chat-input">Escreva uma mensagem</label>
+            <input
+              id="chat-input"
+              class="chat__input"
+              type="text"
+              name="mensagem"
+              placeholder="Digite: projetos, stack, contato…"
+              autocomplete="off"
+              enterkeyhint="send"
+              data-chat-input
+            />
+            <button type="submit" class="btn btn--primary btn--sm chat__send">Enviar</button>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { initChat } from '../scripts/chat';
+
+  const root = document.querySelector<HTMLElement>('[data-chat]');
+  if (root) initChat(root);
+</script>
+
+<style>
+  .chat {
+    height: 100dvh;
+    padding: clamp(0px, 2vw, 24px);
+  }
+
+  .chat__window {
+    display: flex;
+    flex-direction: column;
+    max-width: 900px;
+    height: 100%;
+    margin-inline: auto;
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+  }
+
+  .chat__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0 16px;
+    padding: 2px clamp(14px, 3vw, 20px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .chat__back,
+  .chat__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--touch);
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .chat__back:hover {
+    color: var(--accent-text);
+  }
+
+  .chat__dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    animation: blink 1.6s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0.25;
+    }
+  }
+
+  .chat__main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .chat__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 24px clamp(14px, 3vw, 20px);
+  }
+
+  .chat__log {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .chat__noscript {
+    margin-top: 18px;
+  }
+
+  .chat__typing {
+    margin-top: 18px;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+
+  /* Mensagens (criadas pelo script também: estilos globais ao componente) */
+  .chat :global(.msg--sys) {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    line-height: 1.5;
+    color: var(--text-3);
+  }
+
+  .chat :global(.msg--caio),
+  .chat :global(.msg--user) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .chat :global(.msg--caio) {
+    align-self: flex-start;
+    max-width: min(640px, 92%);
+  }
+
+  .chat :global(.msg--user) {
+    align-self: flex-end;
+    align-items: flex-end;
+    max-width: min(560px, 88%);
+  }
+
+  .chat :global(.msg__who) {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  .chat :global(.msg--user .msg__who) {
+    color: var(--text-3);
+  }
+
+  .chat :global(.msg__bubble) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+
+  .chat :global(.msg--caio .msg__bubble) {
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .chat :global(.msg--user .msg__bubble) {
+    border: 1px solid var(--accent);
+  }
+
+  .chat :global(.msg__list) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 18px;
+    margin: 0;
+  }
+
+  .chat :global(.msg__list li::marker) {
+    content: '• ';
+    color: var(--accent-text);
+  }
+
+  .chat :global(.msg__link) {
+    color: var(--accent-text);
+    text-underline-offset: 3px;
+  }
+
+  .chat__controls {
+    border-top: 1px solid var(--line);
+  }
+
+  /* sem JavaScript os controles não funcionam: ficam escondidos */
+  .chat:not(.is-ready) .chat__controls {
+    display: none;
+  }
+
+  .chat__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px clamp(14px, 3vw, 20px) 0;
+  }
+
+  .chat__chip {
+    min-height: var(--touch);
+    padding: 0 14px;
+    border: 1px solid var(--line-control);
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.06em;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .chat__chip:hover {
+    border-color: var(--accent-text);
+    color: var(--accent-text);
+  }
+
+  .chat__form {
+    display: flex;
+    gap: 8px;
+    padding: 12px clamp(14px, 3vw, 20px) max(16px, env(safe-area-inset-bottom));
+  }
+
+  .chat__input {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--touch);
+    padding: 0 14px;
+    border: 1px solid var(--line-control);
+    border-radius: 0;
+    background: var(--bg);
+    /* 16px evita o zoom automático do iOS ao focar */
+    font-size: var(--fs-body);
+    color: var(--text);
+  }
+
+  .chat__input::placeholder {
+    color: var(--text-3);
+    opacity: 1;
+  }
+
+  .chat__input:focus-visible {
+    border-color: var(--accent-text);
+  }
+
+  /* Celular: barra numa linha só e chips roláveis, para sobrar espaço para as mensagens */
+  @media (max-width: 560px) {
+    .chat__back,
+    .chat__brand {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+    }
+
+    .chat__window {
+      border-inline: 0;
+    }
+
+    .chat__chips {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+
+    .chat__chip {
+      flex: none;
+    }
+  }
+</style>

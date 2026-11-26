@@ -1,0 +1,145 @@
+---
+import { pessoa } from '../content/perfil';
+
+const linhas = [
+  { texto: 'CF//OS v1.0, iniciando', ok: false },
+  { texto: 'verificando memória ........', ok: true },
+  { texto: `carregando perfil: ${pessoa.nomeCompleto.toUpperCase()} ........`, ok: true },
+  { texto: 'carregando projetos ........', ok: true },
+  { texto: 'montando interface ........', ok: true },
+  { texto: 'acesso liberado.', ok: false },
+];
+---
+
+<div class="boot bg-grid" id="boot" role="dialog" aria-modal="true" aria-label="Inicialização do portfólio">
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="boot__box">
+    <p class="boot__brand">CF<span class="accent-text">//</span>OS</p>
+
+    <ol class="boot__lines" role="log" aria-live="polite">
+      {
+        linhas.map((l) => (
+          <li data-boot-line hidden>
+            &gt; {l.texto}
+            {l.ok && <>{' '}<span class="boot__ok">[OK]</span></>}
+          </li>
+        ))
+      }
+    </ol>
+
+    <div class="boot__progress" aria-hidden="true">
+      <div class="boot__progress-head">
+        <span>Carregando</span>
+        <span data-boot-pct>0%</span>
+      </div>
+      <div class="boot__track"><div class="boot__bar" data-boot-bar></div></div>
+    </div>
+
+    <div class="boot__actions">
+      <button type="button" class="btn btn--outline" data-boot-skip>Pular ▸</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { initBoot } from '../scripts/boot';
+
+  const overlay = document.getElementById('boot');
+  if (overlay) initBoot(overlay);
+</script>
+
+<style>
+  /* Escondido por padrão: só aparece com <html class="boot-on"> (script inline do head) */
+  .boot {
+    display: none;
+  }
+
+  :global(html.boot-on) .boot {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--gutter);
+    background-color: var(--bg);
+    color: var(--text);
+    transition: opacity 0.3s;
+  }
+
+  :global(html.boot-on) {
+    overflow: hidden;
+  }
+
+  .boot.is-closing {
+    opacity: 0;
+  }
+
+  .boot__box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .boot__brand {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: var(--tracking-ui);
+  }
+
+  .boot__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 210px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: clamp(12px, 3.4vw, 14px);
+    line-height: 1.5;
+    color: var(--text-2);
+    overflow-wrap: anywhere;
+  }
+
+  .boot__ok {
+    color: var(--accent-text);
+  }
+
+  .boot__progress {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .boot__progress-head {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .boot__track {
+    height: 6px;
+    background: var(--line);
+  }
+
+  .boot__bar {
+    height: 100%;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease-out;
+  }
+
+  .boot__actions {
+    min-height: var(--touch-lg);
+  }
+</style>

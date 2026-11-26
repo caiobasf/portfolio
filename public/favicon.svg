@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>CF</title>
+  <path d="M0 0h52l12 12v52H12L0 52z" fill="#010204"/>
+  <path d="M0 0h52l12 12v52H12L0 52z" fill="none" stroke="#C0091A" stroke-width="3"/>
+  <text x="32" y="43" text-anchor="middle" font-family="'Arial Narrow', Arial, sans-serif" font-weight="700" font-size="30" letter-spacing="-1" fill="#C5CDD1">C<tspan fill="#E5484F">F</tspan></text>
+</svg>
