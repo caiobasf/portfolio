@@ -1,0 +1,115 @@
+---
+/**
+ * Moldura de janela do CaioOS. Sem JS é só uma caixa estática no fluxo da
+ * página; o gerenciador de janelas (os.ts) a torna arrastável, minimizável etc.
+ * Os botões da barra de título nascem desabilitados e o JS os habilita.
+ */
+import { iconeSvg, type NomeIcone } from './icones';
+
+interface Props {
+  id: string;
+  titulo: string;
+  icone: NomeIcone;
+  /** tamanho preferido em px (desktop) */
+  largura: number;
+  altura: number;
+  /** 'dialogo' = só ajuda e fechar, sem maximizar */
+  variante?: 'janela' | 'dialogo';
+  /** itens do menu decorativo; vazio = sem menu */
+  menu?: string[];
+  /** a barra de título é um <h2> (padrão) ou texto simples (quando o título real está no corpo) */
+  tituloNivel?: 'h2' | 'p';
+  aberta?: boolean;
+  /** rótulo curto para a barra de tarefas */
+  curto?: string;
+}
+
+const {
+  id,
+  titulo,
+  icone,
+  largura,
+  altura,
+  variante = 'janela',
+  menu = ['Arquivo', 'Editar', 'Exibir', 'Ajuda'],
+  tituloNivel = 'h2',
+  aberta = false,
+  curto = titulo,
+} = Astro.props;
+
+const Titulo = tituloNivel;
+const idTitulo = `t-${id}`;
+---
+
+<section
+  class="janela"
+  id={`w-${id}`}
+  data-janela={id}
+  data-variante={variante}
+  data-largura={largura}
+  data-altura={altura}
+  data-estado={aberta ? 'aberta' : 'fechada'}
+  data-curto={curto}
+  data-icone={icone}
+  aria-labelledby={idTitulo}
+  tabindex="-1"
+>
+  <div class="titulo-barra">
+    <span class="titulo-icone" set:html={iconeSvg(icone, 16)} />
+    <Titulo class="titulo-texto" id={idTitulo}>{titulo}</Titulo>
+    <div class="titulo-botoes">
+      {
+        variante === 'janela' ? (
+          <>
+            <button type="button" class="tb tb-min" data-acao="minimizar" aria-label={`Minimizar ${curto}`} disabled>
+              <svg viewBox="0 0 8 7" aria-hidden="true" shape-rendering="crispEdges">
+                <rect x="1" y="5" width="6" height="2" />
+              </svg>
+            </button>
+            <button type="button" class="tb tb-max" data-acao="maximizar" aria-label={`Maximizar ${curto}`} disabled>
+              <svg class="ico-max" viewBox="0 0 9 9" aria-hidden="true" shape-rendering="crispEdges">
+                <path d="M0 0h9v2H0zM0 2h1v7H0zM8 2h1v7H8zM1 8h7v1H1z" />
+              </svg>
+              <svg class="ico-res" viewBox="0 0 9 9" aria-hidden="true" shape-rendering="crispEdges">
+                <path d="M2 0h7v2H2zM8 2h1v4H8zM2 2h1v1H2zM7 5h1v1H7zM0 3h7v2H0zM0 5h1v4H0zM6 5h1v4H6zM1 8h5v1H1z" />
+              </svg>
+            </button>
+          </>
+        ) : (
+          <span class="tb tb-ajuda" aria-hidden="true">
+            <svg viewBox="0 0 8 9" shape-rendering="crispEdges">
+              <path d="M1 0h5v1H1zM0 1h2v2H0zM6 1h2v3H6zM5 4h1v1H5zM3 5h2v2H3zM3 8h2v1H3zM4 4h1v1H4z" />
+            </svg>
+          </span>
+        )
+      }
+      <button type="button" class="tb tb-fechar" data-acao="fechar" aria-label={`Fechar ${curto}`} disabled>
+        <svg viewBox="0 0 8 7" aria-hidden="true" shape-rendering="crispEdges">
+          <path d="M0 0h2v1H0zM6 0h2v1H6zM1 1h2v1H1zM5 1h2v1H5zM2 2h4v1H2zM3 3h2v1H3zM2 4h4v1H2zM1 5h2v1H1zM5 5h2v1H5zM0 6h2v1H0zM6 6h2v1H6z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+  {
+    menu.length > 0 && (
+      <div class="menu-barra" aria-hidden="true">
+        {menu.map((m) => (
+          <span>
+            <u>{m[0]}</u>
+            {m.slice(1)}
+          </span>
+        ))}
+      </div>
+    )
+  }
+  <div class="janela-corpo">
+    <slot />
+  </div>
+  {
+    Astro.slots.has('status') && (
+      <div class="status-barra">
+        <slot name="status" />
+      </div>
+    )
+  }
+</section>

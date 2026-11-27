@@ -1,0 +1,457 @@
+---
+/**
+ * Estilo "cyberpunk": HUD neon de uma cidade noturna.
+ * Todo o texto do currículo vem de src/content/perfil.ts; o microtexto do HUD
+ * ("PERFIL DO OPERADOR", "CONTRATOS"…) é da interface do estilo.
+ *
+ * Sem JS a página é completa e legível: relógio mostra "--:--:--", o canvas
+ * não desenha e nada fica escondido. O script (main.ts) acrescenta glitch,
+ * ScrambleText, revelações na rolagem e o canvas da cidade.
+ */
+import './cyberpunk.css';
+import { pessoa, contato, sobre, construo, projetos, stack, trajetoria } from '../../content/perfil';
+
+const [primeiroNome, ...resto] = pessoa.nomeCurto.split(' ');
+const sobrenome = resto.join(' ');
+const ano = new Date().getFullYear();
+const pad = (n: number, t = 2) => String(n).padStart(t, '0');
+
+const nav = [
+  { href: '#perfil', rotulo: 'Perfil' },
+  { href: '#contratos', rotulo: 'Contratos' },
+  { href: '#implantes', rotulo: 'Implantes' },
+  { href: '#registro', rotulo: 'Registro' },
+  { href: '#conectar', rotulo: 'Conectar' },
+];
+
+const siglas: Record<string, string> = {
+  Linguagens: 'LNG',
+  Frameworks: 'FRM',
+  Testes: 'TST',
+  Ferramentas: 'FRR',
+  IAs: 'IAS',
+  Idiomas: 'IDM',
+};
+
+const fichas = [
+  { campo: 'Nome', valor: pessoa.nomeCompleto },
+  { campo: 'Alias', valor: pessoa.apelido },
+  { campo: 'Função', valor: pessoa.cargo },
+  { campo: 'Base', valor: pessoa.local },
+  { campo: 'Status', valor: pessoa.status },
+];
+
+const ticker = construo.map(([a, b]) => `${a} → ${b}`);
+const [a0, b0] = construo[0];
+---
+
+<a class="cp-pular" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="cp-sobreposicao" aria-hidden="true">
+  <div class="cp-scan"></div>
+  <div class="cp-ruido"></div>
+</div>
+
+<header class="cp-topo">
+  <div class="cp-progresso" aria-hidden="true"><span class="js-progresso"></span></div>
+  <div class="cp-topo__in">
+    <a class="cp-marca" href="#topo">
+      <span class="cp-marca__glifo" aria-hidden="true">CF</span>
+      <span class="cp-marca__alias">{pessoa.apelido}<span class="cp-pisca" aria-hidden="true">_</span></span>
+      <span class="cp-sr">, início</span>
+    </a>
+    <nav class="cp-nav" aria-label="Seções">
+      <ul>
+        {
+          nav.map((n, i) => (
+            <li>
+              <a href={n.href} data-nav={n.href.slice(1)}>
+                <span class="cp-nav__n" aria-hidden="true">{pad(i + 1)}</span>
+                {n.rotulo}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <div class="cp-topo__hora" aria-hidden="true">
+      <span class="cp-rotulo">SP</span>
+      <span class="js-relogio">--:--:--</span>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo" tabindex="-1">
+  <!-- ============ APRESENTAÇÃO ============ -->
+  <section class="cp-hero" id="topo" aria-labelledby="cp-nome">
+    <canvas class="cp-cidade js-cidade" aria-hidden="true"></canvas>
+    <div class="cp-hero__veu" aria-hidden="true"></div>
+
+    <div class="cp-hud" aria-hidden="true">
+      <span class="cp-canto cp-canto--ne"></span><span class="cp-canto cp-canto--nd"></span>
+      <span class="cp-canto cp-canto--se"></span><span class="cp-canto cp-canto--sd"></span>
+      <span class="cp-hud__ln cp-hud__ln--ne">SUJEITO // {pessoa.apelido.toUpperCase()} · NÍVEL DE ACESSO: PÚBLICO</span>
+      <span class="cp-hud__ln cp-hud__ln--nd">23°33′S 46°38′O · SP-BR</span>
+      <span class="cp-hud__ln cp-hud__ln--se">TRANSMISSÃO <span class="js-quadro">000000</span></span>
+      <span class="cp-hud__ln cp-hud__ln--sd">ROLE PARA DECODIFICAR ↓</span>
+      <span class="cp-hud__mira"></span>
+    </div>
+
+    <div class="cp-hero__in">
+      <p class="cp-hero__pre">
+        <span class="cp-mono">&gt; identidade verificada</span>
+        <span class="cp-bloco" aria-hidden="true"></span>
+      </p>
+
+      <h1 class="cp-nome" id="cp-nome">
+        <span class="cp-glitch js-glitch" data-text={primeiroNome}>{primeiroNome}</span>
+        {' '}
+        <span class="cp-glitch js-glitch" data-text={sobrenome}>{sobrenome}</span>
+      </h1>
+
+      <p class="cp-hero__cargo">
+        <span class="cp-barra" aria-hidden="true">//</span>
+        <span class="cp-sr">{pessoa.cargo}</span>
+        <span class="js-cargo" aria-hidden="true">{pessoa.cargo}</span>
+      </p>
+
+      <p class="cp-hero__construo">
+        Eu construo <span class="cp-y js-construo-a">{a0}</span> para <span class="cp-c js-construo-b">{b0}</span>.
+      </p>
+
+      <ul class="cp-hero__chips" aria-label="Situação">
+        <li class="cp-pilula cp-pilula--online">
+          <span class="cp-pulso" aria-hidden="true"></span>
+          <span class="cp-mono">STATUS: ONLINE</span>
+          <span class="cp-pilula__sep" aria-hidden="true">|</span>
+          {pessoa.status}
+        </li>
+        <li class="cp-pilula">
+          <span class="cp-mono cp-dim">BASE</span>
+          {pessoa.local}
+        </li>
+      </ul>
+
+      <div class="cp-hero__acoes">
+        <a class="cp-btn cp-btn--y" href="#contratos"><span>Ver contratos</span><span aria-hidden="true">→</span></a>
+        <a class="cp-btn cp-btn--c" href="#conectar"><span>Conectar</span><span aria-hidden="true">⌁</span></a>
+      </div>
+    </div>
+
+    <div class="cp-telemetria" aria-hidden="true">
+      <p class="cp-telemetria__tit cp-mono">TELEMETRIA</p>
+      <dl>
+        <div><dt>Hora SP</dt><dd class="js-relogio">--:--:--</dd></div>
+        <div><dt>Data</dt><dd class="js-data">--.--.----</dd></div>
+        <div><dt>Cursor</dt><dd class="js-cursor">X 0000 · Y 0000</dd></div>
+        <div><dt>Sinal</dt><dd><span class="cp-sinal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span> estável</dd></div>
+        <div><dt>Canal</dt><dd>{contato.github.rotulo}</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="cp-ticker" aria-hidden="true">
+    <div class="cp-ticker__trilho">
+      {
+        [0, 1].map(() => (
+          <div class="cp-ticker__grupo">
+            {ticker.map((t) => (
+              <span>
+                {t}
+                <b>///</b>
+              </span>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- ============ 01 SOBRE ============ -->
+  <section class="cp-secao" id="perfil" aria-labelledby="t-perfil">
+    <div class="cp-cab">
+      <p class="cp-cab__idx" aria-hidden="true"><span>01</span> / sobre</p>
+      <h2 class="cp-cab__tit" id="t-perfil">
+        <span class="cp-sr">Perfil do operador</span>
+        <span class="js-decode" aria-hidden="true">Perfil do operador</span>
+      </h2>
+      <span class="cp-cab__linha js-linha" aria-hidden="true"></span>
+    </div>
+
+    <div class="cp-dossie">
+      <div class="cp-painel cp-dossie__id js-painel">
+        <div class="cp-retrato" aria-hidden="true">
+          <svg viewBox="0 0 120 140" class="cp-retrato__svg">
+            <defs>
+              <pattern id="cp-pontos" width="6" height="6" patternUnits="userSpaceOnUse">
+                <circle cx="3" cy="3" r="1" fill="currentColor"></circle>
+              </pattern>
+            </defs>
+            <path
+              d="M60 18c18 0 30 13 30 33 0 13-5 23-12 29l2 10c16 4 30 13 34 32H6c4-19 18-28 34-32l2-10c-7-6-12-16-12-29 0-20 12-33 30-33z"
+              fill="url(#cp-pontos)"
+              stroke="currentColor"
+              stroke-width="1.2"></path>
+            <path d="M38 52h44M42 64h36" stroke="currentColor" stroke-width=".8" opacity=".6"></path>
+          </svg>
+          <span class="cp-retrato__varre"></span>
+          <span class="cp-retrato__tag cp-mono">ID-{pessoa.apelido.toUpperCase()}</span>
+        </div>
+        <dl class="cp-ficha">
+          {
+            fichas.map((f) => (
+              <div>
+                <dt>{f.campo}</dt>
+                <dd>{f.valor}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+
+      <div class="cp-dossie__txt">
+        <div class="cp-painel cp-painel--m js-painel">
+          <p class="cp-painel__rot cp-mono">bio.txt</p>
+          <p class="cp-bio">{sobre.paragrafo}</p>
+        </div>
+        <ul class="cp-resumo">
+          {
+            sobre.resumo.map((r, i) => (
+              <li class="cp-painel cp-painel--fino js-painel">
+                <p class="cp-resumo__rot cp-mono">
+                  <span aria-hidden="true">{pad(i + 1)} · </span>
+                  {r.rotulo}
+                </p>
+                {r.linhas.map((l, j) => (
+                  <p class={j === 0 ? 'cp-resumo__l1' : 'cp-resumo__l2'}>{l}</p>
+                ))}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 PROJETOS ============ -->
+  <section class="cp-secao" id="contratos" aria-labelledby="t-contratos">
+    <div class="cp-cab">
+      <p class="cp-cab__idx" aria-hidden="true"><span>02</span> / projetos</p>
+      <h2 class="cp-cab__tit" id="t-contratos">
+        <span class="cp-sr">Contratos</span>
+        <span class="js-decode" aria-hidden="true">Contratos</span>
+      </h2>
+      <span class="cp-cab__linha js-linha" aria-hidden="true"></span>
+    </div>
+
+    <div class="cp-contratos">
+      {
+        projetos.map((p, i) => (
+          <article class="cp-contrato js-contrato" aria-labelledby={`proj-${p.id}`}>
+            <div class="cp-contrato__in">
+              <span class="cp-contrato__marca" aria-hidden="true">
+                {pad(i + 1)}
+              </span>
+              <div class="cp-contrato__topo">
+                <span class="cp-mono cp-y">CONTRATO // {p.codigo}</span>
+                <span class="cp-codbarras" aria-hidden="true" />
+              </div>
+              <h3 class="cp-contrato__nome" id={`proj-${p.id}`}>
+                <span class="cp-glitch js-glitch-hover" data-text={p.nome}>
+                  {p.nome}
+                </span>
+              </h3>
+              <ul class="cp-contrato__meta" aria-label="Detalhes">
+                {p.meta.map((m) => (
+                  <li>{m}</li>
+                ))}
+              </ul>
+              <ol class="cp-contrato__itens">
+                {p.itens.map((it, j) => (
+                  <li>
+                    <span class="cp-contrato__n cp-mono" aria-hidden="true">
+                      {pad(j + 1)}
+                    </span>
+                    <span>{it}</span>
+                  </li>
+                ))}
+              </ol>
+              <div class="cp-contrato__equip">
+                <p class="cp-mono cp-dim">Equipamento</p>
+                <ul class="cp-tags">
+                  {p.tags.map((t) => (
+                    <li>{t}</li>
+                  ))}
+                </ul>
+              </div>
+              {p.links.length > 0 && (
+                <ul class="cp-contrato__links">
+                  {p.links.map((l) => (
+                    <li>
+                      <a class="cp-link" href={l.url} rel="noopener">
+                        {l.rotulo}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ============ 03 STACK ============ -->
+  <section class="cp-secao" id="implantes" aria-labelledby="t-implantes">
+    <div class="cp-cab">
+      <p class="cp-cab__idx" aria-hidden="true"><span>03</span> / stack</p>
+      <h2 class="cp-cab__tit" id="t-implantes">
+        <span class="cp-sr">Implantes</span>
+        <span class="js-decode" aria-hidden="true">Implantes</span>
+      </h2>
+      <span class="cp-cab__linha js-linha" aria-hidden="true"></span>
+    </div>
+
+    <ul class="cp-implantes">
+      {
+        stack.map((g, i) => (
+          <li class="cp-modulo js-modulo">
+            <span class="cp-modulo__pinos cp-modulo__pinos--e" aria-hidden="true" />
+            <span class="cp-modulo__pinos cp-modulo__pinos--d" aria-hidden="true" />
+            <div class="cp-modulo__in">
+              <p class="cp-modulo__id cp-mono" aria-hidden="true">
+                IMP-{siglas[g.grupo] ?? pad(i + 1)} · SLOT {pad(i + 1)}
+              </p>
+              <h3 class="cp-modulo__nome">{g.grupo}</h3>
+              <ul class="cp-modulo__itens">
+                {g.itens.map((it) => (
+                  <li>{it}</li>
+                ))}
+              </ul>
+              <p class="cp-modulo__rodape cp-mono" aria-hidden="true">
+                <span class="cp-led" />
+                {pad(g.itens.length)} carregados
+              </p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- ============ 04 TRAJETÓRIA ============ -->
+  <section class="cp-secao" id="registro" aria-labelledby="t-registro">
+    <div class="cp-cab">
+      <p class="cp-cab__idx" aria-hidden="true"><span>04</span> / trajetória</p>
+      <h2 class="cp-cab__tit" id="t-registro">
+        <span class="cp-sr">Registro de dados</span>
+        <span class="js-decode" aria-hidden="true">Registro de dados</span>
+      </h2>
+      <span class="cp-cab__linha js-linha" aria-hidden="true"></span>
+    </div>
+
+    <div class="cp-log">
+      <span class="cp-log__trilho js-trilho" aria-hidden="true"></span>
+      <ol class="cp-log__lista">
+      {
+        trajetoria.map((t, i) => (
+          <li class="cp-log__item js-log">
+            <span class="cp-log__no" aria-hidden="true" />
+            <p class="cp-log__ts cp-mono">
+              <span class="cp-dim" aria-hidden="true">
+                ENTRADA {pad(trajetoria.length - i, 3)} ·{' '}
+              </span>
+              <span class="cp-y">{t.periodo}</span>
+            </p>
+            <h3 class="cp-log__cargo">{t.cargo}</h3>
+            <p class="cp-log__lugar cp-mono">@ {t.lugar}</p>
+            {t.itens.length > 0 && (
+              <ul class="cp-log__linhas">
+                {t.itens.map((it) => (
+                  <li>{it}</li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))
+      }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ 05 CONTATO ============ -->
+  <section class="cp-secao cp-secao--conectar" id="conectar" aria-labelledby="t-conectar">
+    <div class="cp-cab">
+      <p class="cp-cab__idx" aria-hidden="true"><span>05</span> / contato</p>
+      <h2 class="cp-cab__tit" id="t-conectar">
+        <span class="cp-sr">Conectar</span>
+        <span class="js-decode" aria-hidden="true">Conectar</span>
+      </h2>
+      <span class="cp-cab__linha js-linha" aria-hidden="true"></span>
+    </div>
+
+    <div class="cp-console">
+      <div class="cp-console__barra" aria-hidden="true">
+        <span class="cp-mono">canal_seguro.sh</span>
+        <span class="cp-console__luzes"><i></i><i></i><i></i></span>
+      </div>
+      <div class="cp-console__corpo">
+        <div class="cp-console__linhas cp-mono">
+          <p><span class="cp-c">&gt;</span> <span class="js-tecla">abrindo canal com {pessoa.nomeCurto}…</span></p>
+          <p><span class="cp-c">&gt;</span> <span class="js-tecla">base: {pessoa.local}</span></p>
+          <p><span class="cp-c">&gt;</span> <span class="js-tecla">status: {pessoa.status}</span></p>
+          <p class="cp-y"><span class="cp-c">&gt;</span> <span class="js-tecla">escolha uma frequência</span><span class="cp-bloco" aria-hidden="true"></span></p>
+        </div>
+
+        <ul class="cp-canais">
+          <li>
+            <a class="cp-canal cp-canal--y" href={`mailto:${contato.email}`}>
+              <span class="cp-canal__tipo cp-mono">E-mail</span>
+              <span class="cp-canal__valor">{contato.email}</span>
+              <span class="cp-canal__seta" aria-hidden="true">↗</span>
+            </a>
+          </li>
+          <li>
+            <a class="cp-canal cp-canal--c" href={contato.linkedin.url} rel="noopener">
+              <span class="cp-canal__tipo cp-mono">LinkedIn</span>
+              <span class="cp-canal__valor">{contato.linkedin.rotulo}</span>
+              <span class="cp-canal__seta" aria-hidden="true">↗</span>
+            </a>
+          </li>
+          <li>
+            <a class="cp-canal cp-canal--m" href={contato.github.url} rel="noopener">
+              <span class="cp-canal__tipo cp-mono">GitHub</span>
+              <span class="cp-canal__valor">{contato.github.rotulo}</span>
+              <span class="cp-canal__seta" aria-hidden="true">↗</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="cp-console__extra">
+          <button type="button" class="cp-btn cp-btn--c cp-btn--p js-copiar" hidden>
+            <span>Copiar e-mail</span>
+          </button>
+          <a class="cp-btn cp-btn--m cp-btn--p" href="/conversa">
+            <span>Abrir chat</span><span aria-hidden="true">›_</span>
+          </a>
+          <p class="cp-console__aviso cp-mono" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="cp-rodape">
+  <div class="cp-rodape__in">
+    <p class="cp-mono">
+      <span class="cp-y">■</span> fim da transmissão · © {ano} {pessoa.nomeCurto}
+    </p>
+    <p class="cp-mono cp-dim">{pessoa.apelido} · {pessoa.local}</p>
+  </div>
+</footer>
+
+<script>
+  import { iniciar } from './main';
+  iniciar();
+</script>

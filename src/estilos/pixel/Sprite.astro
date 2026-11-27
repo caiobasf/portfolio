@@ -1,0 +1,27 @@
+---
+/** Desenha um sprite (matriz de caracteres) como SVG nítido. Decorativo. */
+import { retangulos } from './sprites';
+
+interface Props {
+  sprite: string[];
+  /** tamanho de cada pixel em px CSS */
+  escala?: number;
+  class?: string;
+}
+const { sprite, escala = 4, class: classe } = Astro.props;
+const w = sprite[0].length;
+const h = sprite.length;
+const rects = retangulos(sprite);
+---
+
+<svg
+  class:list={['p-sprite', classe]}
+  viewBox={`0 0 ${w} ${h}`}
+  width={w * escala}
+  height={h * escala}
+  shape-rendering="crispEdges"
+  aria-hidden="true"
+  focusable="false"
+>
+  {rects.map((r) => <rect x={r.x} y={r.y} width={r.w} height="1" fill={r.c} class={r.olho ? 'p-olho' : undefined} />)}
+</svg>

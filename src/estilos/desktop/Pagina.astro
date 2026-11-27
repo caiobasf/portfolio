@@ -1,0 +1,522 @@
+---
+/**
+ * Estilo "desktop": CaioOS 98, um sistema operacional genérico dos anos 90.
+ *
+ * Sem JS: os ícones são links para âncoras e todas as janelas aparecem
+ * empilhadas no fluxo da página, com o conteúdo completo. Com JS (os.ts), a
+ * página vira uma área de trabalho: boot, janelas arrastáveis, barra de tarefas,
+ * menu Iniciar e relógio.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import Janela from './Janela.astro';
+import { iconeSvg, type NomeIcone } from './icones';
+import { pessoa, contato, sobre, construo, projetos, stack, trajetoria, curriculoPdf } from '../../content/perfil';
+import './desktop.css';
+
+const temPdf = fs.existsSync(path.join(process.cwd(), 'public', curriculoPdf));
+
+const apps: { id: string; rotulo: string; menu: string; icone: NomeIcone }[] = [
+  { id: 'sobre', rotulo: 'Sobre mim.txt', menu: 'Sobre mim', icone: 'texto' },
+  { id: 'projetos', rotulo: 'Projetos', menu: 'Projetos', icone: 'pasta' },
+  { id: 'stack', rotulo: 'Stack.exe', menu: 'Stack', icone: 'engrenagem' },
+  { id: 'trajetoria', rotulo: 'Trajetória', menu: 'Trajetória', icone: 'globo' },
+  { id: 'contato', rotulo: 'Contato', menu: 'Contato', icone: 'carta' },
+  { id: 'lixeira', rotulo: 'Lixeira', menu: 'Lixeira', icone: 'lixeira' },
+];
+
+const lixo = [
+  'bug_que_virou_feature.js',
+  'versao_final_FINAL_v3.zip',
+  'ponto_e_virgula_perdido.txt',
+  'README_desatualizado.md',
+  'console_log_aqui.js',
+];
+
+const [a0, b0] = construo[0];
+const totalItensStack = stack.reduce((n, g) => n + g.itens.length, 0);
+---
+
+<a class="pular" href="#janelas">Pular para o conteúdo</a>
+
+<div class="boot" data-boot hidden aria-hidden="true">
+  <div class="boot-bios" data-bios>
+    <div class="bios-logo" set:html={iconeSvg('monitor', 64)} />
+    <p class="bios-linha">CaioBIOS 4.0 · Sistema Básico de Entrada e Saída</p>
+    <p class="bios-linha">Processador: Cérebro Full Stack @ 100% de café</p>
+    <p class="bios-linha">Memória: <span data-mem>0</span> KB OK</p>
+    <p class="bios-linha">Detectando unidades… C:\ CAIOOS</p>
+    <p class="bios-linha">Carregando o CaioOS 98…</p>
+  </div>
+  <div class="boot-splash" data-splash>
+    <div class="nuvens"><i></i><i></i><i></i><i></i></div>
+    <div class="splash-logo" data-splash-logo>
+      <span class="splash-icone" set:html={iconeSvg('monitor', 96)} />
+      <p class="splash-marca"><span>Caio</span><b>OS</b><sup>98</sup></p>
+      <p class="splash-sub">Sistema Operacional do Portfólio</p>
+    </div>
+    <div class="splash-faixa" data-faixa></div>
+    <p class="splash-pular">Clique ou pressione qualquer tecla para pular</p>
+  </div>
+</div>
+
+<header class="mesa-cab">
+  <nav class="icones" aria-label="Área de trabalho">
+    <ul>
+      {
+        apps.map((a) => (
+          <li>
+            <a class="icone" href={`#w-${a.id}`} data-abre={a.id}>
+              <span class="icone-img" set:html={iconeSvg(a.icone, 48)} />
+              <span class="icone-rotulo">{a.rotulo}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>
+
+<main id="janelas" tabindex="-1">
+  <Janela id="bemvindo" titulo="Bem-vindo" curto="Bem-vindo" icone="monitor" largura={720} altura={0} menu={[]} tituloNivel="p" aberta variante="dialogo">
+    <div class="bv">
+      <p class="bv-ola">Bem-vindo ao <span>Caio</span><b>OS</b><sup>98</sup></p>
+      <div class="bv-grade">
+        <div class="bv-painel">
+          <h1 class="bv-nome">{pessoa.nomeCurto}</h1>
+          <p class="bv-completo">{pessoa.nomeCompleto}</p>
+          <p class="bv-cargo">{pessoa.cargo} · {pessoa.local}</p>
+          <p class="bv-status"><span class="led" aria-hidden="true"></span>{pessoa.status}</p>
+          <div class="dica">
+            <span class="dica-icone" set:html={iconeSvg('lampada', 32)} />
+            <div>
+              <p class="dica-titulo">Você sabia?</p>
+              <p class="dica-texto" data-dica aria-live="polite">
+                Eu construo <b data-dica-a>{a0}</b> para <b data-dica-b>{b0}</b>.
+              </p>
+            </div>
+          </div>
+        </div>
+        <nav class="bv-acoes" aria-label="Atalhos">
+          <a class="botao" href="#w-sobre" data-abre="sobre">Sobre mim</a>
+          <a class="botao" href="#w-projetos" data-abre="projetos">Projetos</a>
+          <a class="botao" href="#w-stack" data-abre="stack">Stack</a>
+          <a class="botao" href="#w-trajetoria" data-abre="trajetoria">Trajetória</a>
+          <a class="botao" href="#w-contato" data-abre="contato">Contato</a>
+          <a class="botao" href="/conversa">Conversar</a>
+          <button type="button" class="botao" data-acao="proxima-dica" data-so-js hidden>Próxima dica</button>
+        </nav>
+      </div>
+      <p class="bv-rodape" data-so-js hidden>
+        <span class="so-mouse">Dê um duplo clique nos ícones da área de trabalho para abrir os programas.</span>
+        <span class="so-toque">Toque nos ícones da área de trabalho para abrir os programas.</span>
+      </p>
+    </div>
+  </Janela>
+
+  <Janela id="sobre" titulo="Sobre mim.txt - Bloco de notas" curto="Sobre mim.txt" icone="texto" largura={600} altura={500} menu={['Arquivo', 'Editar', 'Pesquisar', 'Ajuda']}>
+    <div class="bloco">
+      <p>{sobre.paragrafo}</p>
+      <p class="bloco-linha" aria-hidden="true">────────────────────────────</p>
+      <dl class="bloco-resumo">
+        {
+          sobre.resumo.map((r) => (
+            <div>
+              <dt>[{r.rotulo}]</dt>
+              {r.linhas.map((l) => (
+                <dd>{l}</dd>
+              ))}
+            </div>
+          ))
+        }
+      </dl>
+      <p class="bloco-linha" aria-hidden="true">────────────────────────────</p>
+      <p>
+        E-mail: <a href={`mailto:${contato.email}`}>{contato.email}</a>
+        {temPdf && (
+          <>
+            <br />
+            Currículo: <a href={curriculoPdf} download>baixar PDF</a>
+          </>
+        )}
+        <span class="cursor" aria-hidden="true"></span>
+      </p>
+    </div>
+    <Fragment slot="status">
+      <span class="status-caixa">Ln 1, Col 1</span>
+      <span class="status-caixa">UTF-8</span>
+    </Fragment>
+  </Janela>
+
+  <Janela id="projetos" titulo="Projetos" icone="pasta" largura={780} altura={540} menu={['Arquivo', 'Editar', 'Exibir', 'Ir', 'Favoritos', 'Ajuda']}>
+    <div class="exp" data-exp data-vista="raiz">
+      <div class="exp-ferramentas" data-so-js hidden>
+        <button type="button" class="ferr" data-acao="voltar" disabled>
+          <span aria-hidden="true">◀</span> Voltar
+        </button>
+        <button type="button" class="ferr" data-acao="acima" disabled>
+          <span aria-hidden="true">▲</span> Acima
+        </button>
+      </div>
+      <div class="exp-endereco">
+        <span class="exp-endereco-rotulo" aria-hidden="true">Endereço</span>
+        <p class="campo exp-caminho" data-caminho>
+          <span set:html={iconeSvg('pasta', 16)} />
+          <span data-caminho-texto>C:\Meus Documentos\Projetos</span>
+        </p>
+      </div>
+      <div class="exp-paineis">
+        <nav class="exp-arvore campo" aria-label="Pastas">
+          <ul>
+            <li>
+              <a href="#w-projetos" data-raiz class="arvore-item">
+                <span set:html={iconeSvg('pasta', 16)} />Projetos
+              </a>
+              <ul>
+                {
+                  projetos.map((p) => (
+                    <li>
+                      <a href={`#proj-${p.id}`} data-arvore={p.id} class="arvore-item">
+                        <span set:html={iconeSvg('pasta', 16)} />
+                        {p.nome}
+                      </a>
+                    </li>
+                  ))
+                }
+              </ul>
+            </li>
+          </ul>
+        </nav>
+        <div class="exp-conteudo campo">
+          <ul class="exp-icones">
+            {
+              projetos.map((p) => (
+                <li>
+                  <a class="item-pasta abrivel" href={`#proj-${p.id}`} data-projeto={p.id}>
+                    <span set:html={iconeSvg('pasta', 48)} />
+                    <span class="item-rotulo">{p.nome}</span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+          {
+            projetos.map((p) => (
+              <article class="proj" id={`proj-${p.id}`} data-projeto-detalhe={p.id}>
+                <div class="proj-cab">
+                  <span set:html={iconeSvg('pasta', 48)} />
+                  <div>
+                    <h3>{p.nome}</h3>
+                    <p class="proj-codigo">{p.codigo} · Pasta de arquivos</p>
+                  </div>
+                </div>
+                <ul class="proj-meta" aria-label="Detalhes">
+                  {p.meta.map((m) => (
+                    <li>{m}</li>
+                  ))}
+                </ul>
+                <h4>Tecnologias ({p.tags.length})</h4>
+                <ul class="proj-tags">
+                  {p.tags.map((t) => (
+                    <li>
+                      <span set:html={iconeSvg('engrenagem', 16)} />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+                <h4>LEIAME.txt</h4>
+                <ul class="proj-itens">
+                  {p.itens.map((i) => (
+                    <li>{i}</li>
+                  ))}
+                </ul>
+                {p.links.length > 0 && (
+                  <p class="proj-links">
+                    {p.links.map((l) => (
+                      <a class="botao" href={l.url} target="_blank" rel="noopener noreferrer">
+                        {l.rotulo}
+                      </a>
+                    ))}
+                  </p>
+                )}
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+    <Fragment slot="status">
+      <span class="status-caixa status-larga" data-exp-status>{projetos.length} objeto(s)</span>
+      <span class="status-caixa">Meu computador</span>
+    </Fragment>
+  </Janela>
+
+  <Janela id="stack" titulo="Propriedades de Stack.exe" curto="Stack.exe" icone="engrenagem" largura={590} altura={0} menu={[]} variante="dialogo">
+    <div class="props" data-props>
+      <div class="abas" data-abas hidden>
+        {
+          stack.map((g, i) => (
+            <button type="button" class="aba" id={`aba-${i}`} data-aba={i}>
+              {g.grupo}
+            </button>
+          ))
+        }
+      </div>
+      <div class="paineis">
+        {
+          stack.map((g, i) => (
+            <section class="painel" id={`painel-${i}`} data-painel={i} aria-labelledby={`ph-${i}`}>
+              <div class="painel-cab">
+                <span set:html={iconeSvg('engrenagem', 32)} />
+                <h3 id={`ph-${i}`}>{g.grupo}</h3>
+              </div>
+              <hr />
+              <dl class="painel-info">
+                <div>
+                  <dt>Tipo:</dt>
+                  <dd>Grupo de tecnologias</dd>
+                </div>
+                <div>
+                  <dt>Local:</dt>
+                  <dd>C:\CaioOS\Stack\{g.grupo}</dd>
+                </div>
+                <div>
+                  <dt>Itens:</dt>
+                  <dd>
+                    {g.itens.length} de {totalItensStack}
+                  </dd>
+                </div>
+              </dl>
+              <hr />
+              <ul class="painel-lista campo">
+                {g.itens.map((t) => (
+                  <li>
+                    <span class="caixa-check" aria-hidden="true" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        }
+      </div>
+      <div class="props-botoes" data-so-js hidden>
+        <button type="button" class="botao botao-padrao" data-acao="fechar-janela">OK</button>
+        <button type="button" class="botao" data-acao="fechar-janela">Cancelar</button>
+        <button type="button" class="botao" disabled>Aplicar</button>
+      </div>
+    </div>
+  </Janela>
+
+  <Janela id="trajetoria" titulo="Trajetória" icone="globo" largura={780} altura={520}>
+    <div class="traj" data-traj>
+      <div class="traj-lista campo">
+        <table>
+          <caption class="sr-only">Trajetória profissional e formação</caption>
+          <thead>
+            <tr>
+              <th scope="col">Nome</th>
+              <th scope="col" class="col-local">Local</th>
+              <th scope="col">Período</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              trajetoria.map((t, i) => (
+                <tr data-linha={i}>
+                  <td>
+                    <a href={`#etapa-${i}`} data-etapa={i} class="traj-item">
+                      <span set:html={iconeSvg(i === trajetoria.length - 1 ? 'texto' : 'pasta', 16)} />
+                      {t.cargo}
+                    </a>
+                  </td>
+                  <td class="col-local">{t.lugar}</td>
+                  <td class="col-periodo">{t.periodo}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="traj-detalhes">
+        {
+          trajetoria.map((t, i) => (
+            <article class="etapa" id={`etapa-${i}`} data-etapa-detalhe={i}>
+              <h3>{t.cargo}</h3>
+              <p class="etapa-meta">
+                {t.lugar} · {t.periodo}
+              </p>
+              {t.itens.length > 0 ? (
+                <ul>
+                  {t.itens.map((it) => (
+                    <li>{it}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="etapa-vazia">Formação técnica concluída.</p>
+              )}
+            </article>
+          ))
+        }
+      </div>
+    </div>
+    <Fragment slot="status">
+      <span class="status-caixa status-larga" data-traj-status>{trajetoria.length} objeto(s)</span>
+      <span class="status-caixa">Detalhes</span>
+    </Fragment>
+  </Janela>
+
+  <Janela id="contato" titulo="Nova mensagem - Correio" curto="Nova mensagem" icone="carta" largura={640} altura={540} menu={['Arquivo', 'Editar', 'Exibir', 'Inserir', 'Formatar', 'Ajuda']}>
+    <form class="mail" data-mail action={`mailto:${contato.email}`} method="get">
+      <div class="mail-ferr">
+        <button type="submit" class="ferr ferr-grande">
+          <span set:html={iconeSvg('carta', 32)} />
+          Enviar
+        </button>
+        <a class="ferr ferr-grande" href={contato.linkedin.url} target="_blank" rel="noopener noreferrer">
+          <span set:html={iconeSvg('globo', 32)} />
+          LinkedIn
+        </a>
+        <a class="ferr ferr-grande" href={contato.github.url} target="_blank" rel="noopener noreferrer">
+          <span set:html={iconeSvg('monitor', 32)} />
+          GitHub
+        </a>
+        <a class="ferr ferr-grande" href="/conversa">
+          <span set:html={iconeSvg('lampada', 32)} />
+          Conversar
+        </a>
+      </div>
+      <div class="mail-campos">
+        <p class="mail-linha">
+          <span class="mail-rotulo">Para:</span>
+          <a class="campo mail-para" href={`mailto:${contato.email}`}>{contato.email}</a>
+        </p>
+        <p class="mail-linha">
+          <label class="mail-rotulo" for="mail-assunto">Assunto:</label>
+          <input class="campo" id="mail-assunto" name="subject" type="text" value="Olá, Caio!" />
+        </p>
+      </div>
+      <label class="sr-only" for="mail-corpo">Mensagem</label>
+      <textarea class="campo mail-corpo" id="mail-corpo" name="body" rows="7">Oi, Caio! Vi seu portfólio no CaioOS e queria conversar sobre uma oportunidade.</textarea>
+      <p class="mail-outros">
+        Também estou em <a href={contato.linkedin.url} target="_blank" rel="noopener noreferrer">{contato.linkedin.rotulo}</a> e <a
+          href={contato.github.url}
+          target="_blank"
+          rel="noopener noreferrer">{contato.github.rotulo}</a
+        >.
+      </p>
+    </form>
+    <Fragment slot="status">
+      <span class="status-caixa status-larga" data-mail-status>Pronto</span>
+    </Fragment>
+  </Janela>
+
+  <Janela id="lixeira" titulo="Lixeira" icone="lixeira" largura={520} altura={0}>
+    <div class="lix">
+      <ul class="lix-lista campo" data-lix-lista>
+        {
+          lixo.map((f) => (
+            <li>
+              <span set:html={iconeSvg('texto', 16)} />
+              {f}
+            </li>
+          ))
+        }
+      </ul>
+      <p class="lix-vazia campo" data-lix-vazia hidden>A Lixeira está vazia. Nenhum bug sobreviveu.</p>
+      <p class="lix-acoes" data-so-js hidden>
+        <button type="button" class="botao" data-acao="esvaziar">Esvaziar Lixeira</button>
+      </p>
+    </div>
+    <Fragment slot="status">
+      <span class="status-caixa status-larga" data-lix-status>{lixo.length} objeto(s)</span>
+    </Fragment>
+  </Janela>
+</main>
+
+<footer class="barra-tarefas">
+  <button type="button" class="iniciar" popovertarget="menu-iniciar" data-iniciar>
+    <span set:html={iconeSvg('monitor', 16)} />
+    Iniciar
+  </button>
+  <div id="menu-iniciar" class="menu-iniciar" popover>
+    <div class="mi-faixa" aria-hidden="true"><span>Caio<b>OS</b> 98</span></div>
+    <nav aria-label="Menu Iniciar">
+      <ul>
+        {
+          apps.map((a) => (
+            <li>
+              <a class="mi-item" href={`#w-${a.id}`} data-abre={a.id}>
+                <span set:html={iconeSvg(a.icone, 32)} />
+                {a.menu}
+              </a>
+            </li>
+          ))
+        }
+        <li class="mi-sep" aria-hidden="true"></li>
+        <li>
+          <a class="mi-item" href="#w-bemvindo" data-abre="bemvindo">
+            <span set:html={iconeSvg('monitor', 32)} />Bem-vindo
+          </a>
+        </li>
+        <li>
+          <a class="mi-item" href="/conversa">
+            <span set:html={iconeSvg('lampada', 32)} />Conversar com o Caio
+          </a>
+        </li>
+        <li class="mi-sep" aria-hidden="true"></li>
+        <li data-so-js hidden>
+          <button type="button" class="mi-item" data-acao="desligar">
+            <span set:html={iconeSvg('monitor', 32)} />Desligar…
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  <span class="barra-sep" aria-hidden="true"></span>
+  <div class="tarefas" role="group" aria-label="Janelas abertas" data-tarefas></div>
+  <div class="bandeja">
+    <span class="bandeja-status" title={pessoa.status}>
+      <span class="led" aria-hidden="true"></span>
+      <span class="sr-only">{pessoa.status}</span>
+    </span>
+    <time class="relogio" data-relogio aria-label="Hora atual">--:--</time>
+  </div>
+</footer>
+
+<div class="desligar-fundo" data-desligar hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t-desligar" tabindex="-1">
+    <div class="titulo-barra">
+      <p class="titulo-texto" id="t-desligar">Desligar o CaioOS</p>
+      <div class="titulo-botoes">
+        <button type="button" class="tb tb-fechar" data-acao="cancelar-desligar" aria-label="Cancelar">
+          <svg viewBox="0 0 8 7" aria-hidden="true" shape-rendering="crispEdges">
+            <path d="M0 0h2v1H0zM6 0h2v1H6zM1 1h2v1H1zM5 1h2v1H5zM2 2h4v1H2zM3 3h2v1H3zM2 4h4v1H2zM1 5h2v1H1zM5 5h2v1H5zM0 6h2v1H0zM6 6h2v1H6z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <form class="dlg-corpo" data-form-desligar>
+      <span set:html={iconeSvg('monitor', 48)} />
+      <fieldset>
+        <legend>O que você deseja que o computador faça?</legend>
+        <label><input type="radio" name="opcao" value="desligar" checked /> Desligar o computador</label>
+        <label><input type="radio" name="opcao" value="reiniciar" /> Reiniciar o computador</label>
+        <label><input type="radio" name="opcao" value="terminal" /> Reiniciar em modo terminal</label>
+      </fieldset>
+      <div class="dlg-botoes">
+        <button type="submit" class="botao botao-padrao">Sim</button>
+        <button type="button" class="botao" data-acao="cancelar-desligar">Não</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="desligado" data-desligado hidden role="dialog" aria-modal="true" aria-labelledby="t-desligado">
+  <p id="t-desligado">Agora é seguro desligar o computador.</p>
+  <button type="button" class="religar" data-acao="religar">Clique aqui ou pressione uma tecla para religar</button>
+</div>
+
+<script>
+  import './os';
+</script>

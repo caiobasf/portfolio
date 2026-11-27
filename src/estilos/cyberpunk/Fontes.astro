@@ -1,0 +1,19 @@
+---
+/** Fontes do estilo cyberpunk (só latino): Orbitron, Chakra Petch e Share Tech Mono. */
+import orbitron from '@fontsource-variable/orbitron/files/orbitron-latin-wght-normal.woff2?url';
+import chakra400 from '@fontsource/chakra-petch/files/chakra-petch-latin-400-normal.woff2?url';
+import chakra600 from '@fontsource/chakra-petch/files/chakra-petch-latin-600-normal.woff2?url';
+import shareTech from '@fontsource/share-tech-mono/files/share-tech-mono-latin-400-normal.woff2?url';
+import { fontFace } from '../fontes';
+
+const css = [
+  fontFace('Orbitron Variable', '400 900', orbitron, true),
+  fontFace('Chakra Petch', '400', chakra400),
+  fontFace('Chakra Petch', '600', chakra600),
+  fontFace('Share Tech Mono', '400', shareTech),
+].join('');
+---
+
+<link rel="preload" href={orbitron} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={chakra400} as="font" type="font/woff2" crossorigin />
+<style is:inline set:html={css}></style>

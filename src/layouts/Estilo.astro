@@ -1,0 +1,72 @@
+---
+/**
+ * Layout das páginas de estilo (/estilo/<id>/).
+ *
+ * De propósito NÃO importa global.css nem tokens: cada estilo traz o próprio
+ * reset, fontes e cores. Aqui ficam só o <head> (SEO, ícones, Open Graph), a
+ * transição entre páginas e o botão de troca de estilo.
+ *
+ * O canonical aponta para "/" porque o conteúdo é o mesmo da landing.
+ */
+import StyleSwitcher from '../components/StyleSwitcher.astro';
+import EstiloTransicao from '../components/EstiloTransicao.astro';
+import { seo, pessoa, pessoaJsonLd } from '../content/perfil';
+import { estiloPorId } from '../estilos/registro';
+
+interface Props {
+  /** id do estilo, igual ao do registro (src/estilos/registro.ts) */
+  id: string;
+  title?: string;
+  description?: string;
+  /** cores claras/escuras do navegador: o padrão vem do registro */
+  themeColor?: string;
+  /** classe opcional no <body> */
+  bodyClass?: string;
+  /** esquema de cor que o estilo usa (afeta barras de rolagem e formulários) */
+  colorScheme?: 'light' | 'dark';
+}
+
+const estilo = estiloPorId(Astro.props.id);
+const {
+  id,
+  title = `${pessoa.nomeCurto} — ${pessoa.cargo} · estilo ${estilo.nome}`,
+  description = seo.descricao,
+  themeColor = estilo.themeColor,
+  bodyClass,
+  colorScheme = 'light',
+} = Astro.props;
+
+const site = Astro.site ?? new URL(Astro.url.origin);
+const canonical = new URL('/', site).href;
+const ogImage = new URL('/og-image.png', site).href;
+---
+
+<!doctype html>
+<html lang="pt-BR" data-estilo={id} style={`color-scheme:${colorScheme}`}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content={themeColor} />
+    <EstiloTransicao id={id} />
+    <slot name="head" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="author" content={pessoa.nomeCompleto} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content={seo.siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json" set:html={JSON.stringify(pessoaJsonLd(canonical))} />
+  </head>
+  <body class={bodyClass}>
+    <slot />
+    <StyleSwitcher atual={id} />
+  </body>
+</html>

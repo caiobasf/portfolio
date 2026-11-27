@@ -1,0 +1,12 @@
+---
+/** Fontes do estilo Caderno: Caveat (títulos e anotações) e Patrick Hand (texto). */
+import caveat from '@fontsource-variable/caveat/files/caveat-latin-wght-normal.woff2?url';
+import patrick from '@fontsource/patrick-hand/files/patrick-hand-latin-400-normal.woff2?url';
+import { fontFace } from '../fontes';
+
+const css = [fontFace('Caveat Variable', '400 700', caveat, true), fontFace('Patrick Hand', '400', patrick)].join('');
+---
+
+<link rel="preload" href={caveat} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={patrick} as="font" type="font/woff2" crossorigin />
+<style is:inline set:html={css}></style>

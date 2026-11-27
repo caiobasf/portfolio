@@ -1,0 +1,98 @@
+---
+/**
+ * Estilo "jornal": ilustração em retícula (meio-tom) feita só com padrões SVG.
+ * Uma estação de trabalho genérica: monitor com código, teclado, caneca e luz.
+ * Nada de foto: é "arte da redação".
+ */
+const tinta = '#1b1712';
+const papel = '#f1ead8';
+const vermelho = '#8a1c1c';
+// raios dos pontos de cada tom (claro → escuro)
+const tons = [0.7, 1.25, 1.8, 2.35];
+const linhas = [
+  { x: 168, w: 90, c: 'v' },
+  { x: 188, w: 150, c: 't' },
+  { x: 188, w: 110, c: 't' },
+  { x: 208, w: 170, c: 't' },
+  { x: 208, w: 70, c: 'v' },
+  { x: 188, w: 130, c: 't' },
+  { x: 168, w: 60, c: 't' },
+];
+---
+
+<svg class="j-ilustra" viewBox="0 0 640 430" role="img" aria-labelledby="j-ilustra-tit">
+  <title id="j-ilustra-tit">Ilustração em retícula de uma estação de trabalho: monitor com código, teclado e caneca de café</title>
+  <defs>
+    {
+      tons.map((r, i) => (
+        <pattern id={`j-rt${i}`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <circle cx="3" cy="3" r={r} fill={tinta} />
+        </pattern>
+      ))
+    }
+    <pattern id="j-rtv" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(15)">
+      <circle cx="3" cy="3" r="1.5" fill={vermelho} />
+    </pattern>
+    <linearGradient id="j-gl" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" />
+      <stop offset="0.55" stop-color="#fff" stop-opacity="0.15" />
+      <stop offset="1" stop-color="#fff" stop-opacity="0" />
+    </linearGradient>
+    <radialGradient id="j-gs" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" />
+      <stop offset="1" stop-color="#fff" stop-opacity="0" />
+    </radialGradient>
+    <mask id="j-m-luz"><rect width="640" height="430" fill="url(#j-gl)" /></mask>
+    <mask id="j-m-sombra"><ellipse cx="300" cy="372" rx="300" ry="46" fill="url(#j-gs)" /></mask>
+  </defs>
+
+  <!-- fundo: janela com sol vermelho em retícula e a cidade -->
+  <rect width="640" height="430" fill={papel} />
+  <rect x="0" y="0" width="640" height="300" fill="url(#j-rt0)" mask="url(#j-m-luz)" opacity="0.9" />
+  <circle cx="520" cy="96" r="70" fill="url(#j-rtv)" />
+  <g fill="url(#j-rt2)">
+    <rect x="410" y="170" width="34" height="130" />
+    <rect x="452" y="140" width="26" height="160" />
+    <rect x="486" y="196" width="40" height="104" />
+    <rect x="534" y="160" width="22" height="140" />
+    <rect x="562" y="210" width="44" height="90" />
+    <rect x="612" y="182" width="28" height="118" />
+  </g>
+  <line x1="0" y1="300" x2="640" y2="300" stroke={tinta} stroke-width="3" />
+
+  <!-- mesa e sombra -->
+  <rect x="0" y="300" width="640" height="130" fill="url(#j-rt1)" />
+  <rect x="0" y="300" width="640" height="130" fill="url(#j-rt3)" mask="url(#j-m-sombra)" />
+
+  <!-- monitor -->
+  <path d="M276 282 L324 282 L336 340 L264 340 Z" fill="url(#j-rt3)" stroke={tinta} stroke-width="2" />
+  <rect x="216" y="336" width="168" height="14" rx="7" fill={tinta} />
+  <rect x="120" y="44" width="360" height="244" rx="14" fill={tinta} />
+  <rect x="138" y="60" width="324" height="200" rx="4" fill={papel} />
+  <rect x="138" y="60" width="324" height="200" rx="4" fill="url(#j-rt0)" opacity="0.55" />
+  {
+    linhas.map((l, i) => (
+      <rect x={l.x} y={82 + i * 24} width={l.w} height="9" rx="2" fill={l.c === 'v' ? vermelho : tinta} />
+    ))
+  }
+  <text x="150" y="91" font-family="ui-monospace, monospace" font-size="11" font-weight="700" fill={tinta}>1</text>
+  <rect x="300" y="226" width="10" height="18" fill={vermelho} />
+  <circle cx="300" cy="273" r="3" fill={papel} />
+
+  <!-- teclado -->
+  <path d="M96 360 L436 360 L470 410 L60 410 Z" fill="url(#j-rt2)" stroke={tinta} stroke-width="2.5" />
+  <g stroke={papel} stroke-width="3">
+    <line x1="88" y1="374" x2="446" y2="374" />
+    <line x1="80" y1="388" x2="455" y2="388" />
+    <line x1="72" y1="400" x2="463" y2="400" />
+  </g>
+
+  <!-- caneca com vapor -->
+  <rect x="512" y="318" width="58" height="72" rx="6" fill="url(#j-rt3)" stroke={tinta} stroke-width="2.5" />
+  <path d="M570 334 q26 4 22 22 q-3 16 -22 18" fill="none" stroke={tinta} stroke-width="6" />
+  <g fill="none" stroke={tinta} stroke-width="2.5" stroke-linecap="round" class="j-vapor">
+    <path d="M528 304 q-10 -14 0 -26 q10 -12 0 -26" />
+    <path d="M548 304 q-10 -14 0 -26 q10 -12 0 -26" />
+  </g>
+  <rect x="0" y="0" width="640" height="430" fill="none" stroke={tinta} stroke-width="4" />
+</svg>
